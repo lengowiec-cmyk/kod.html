@@ -14,6 +14,7 @@ py -m venv .venv
 
 Program zachowuje istniejący mechanizm licencji PDFManager.
 
+- [Opis możliwości i przewodnik użytkownika — PDF](docs/PDFManager_opis_i_instrukcja.pdf)
 - [Pełna instrukcja](README_ROZBUDOWA.md)
 - [Nowe funkcje 0.5 i ograniczenia](ZMIANY_0.5.md)
 - [Szafki DMS](MODUL_DMS.md)
