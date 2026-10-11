@@ -1,0 +1,9 @@
+{
+  "pages": 300,
+  "gui_open_grid_seconds": 0.274,
+  "rendered_grid_pages": 18,
+  "first_index_seconds": 0.052,
+  "cached_search_seconds": 0.001,
+  "process_peak_rss_mib": 192.1,
+  "platform": "Linux, Qt offscreen"
+}
