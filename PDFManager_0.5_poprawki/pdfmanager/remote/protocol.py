@@ -1,5 +1,5 @@
 """Shared public protocol. Client never contains an administrator private key."""
-import base64,json,re
+import base64,json,re,uuid
 from datetime import datetime,timezone
 from urllib.parse import urlsplit
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
@@ -18,6 +18,10 @@ def public_key(pem):
 
 def origin(url):
     parsed=urlsplit(url)
+    if parsed.scheme=='pdm-share':
+        if parsed.username or parsed.password or parsed.port or parsed.query or parsed.fragment:raise ValueError('Nieprawidłowy kanał współdzielony.')
+        identity=str(uuid.UUID(parsed.netloc))
+        return 'pdm-share:'+identity,0
     if parsed.scheme!='https' or not parsed.hostname or parsed.username or parsed.password or parsed.fragment:raise ValueError('Wymagany jest adres HTTPS bez danych logowania i fragmentu.')
     return parsed.hostname.lower(),parsed.port or 443
 
@@ -27,7 +31,14 @@ def config_check(data):
     parsed=urlsplit(data['base_url'])
     if parsed.query:raise ValueError('Adres bazowy nie może zawierać parametrów.')
     if len(data.get('extra_ca_pem',''))>32768:raise ValueError('Certyfikat CA jest zbyt duży.')
-    return {'schema':1,'public_key':data['public_key'],'base_url':data['base_url'].rstrip('/'),'extra_ca_pem':data.get('extra_ca_pem','')}
+    result={'schema':1,'public_key':data['public_key'],'base_url':data['base_url'].rstrip('/'),'extra_ca_pem':data.get('extra_ca_pem','')}
+    if parsed.scheme=='pdm-share':
+        if parsed.path not in ('','/') or data.get('transport')!='shared_folder':raise ValueError('Nieprawidłowa konfiguracja wspólnego folderu.')
+        hint=data.get('folder_hint','')
+        if not isinstance(hint,str) or not 1<=len(hint)<=2000:raise ValueError('Brak lokalizacji wspólnego folderu.')
+        result.update(transport='shared_folder',workspace=str(uuid.UUID(parsed.netloc)),folder_hint=hint)
+    elif data.get('transport','https')!='https':raise ValueError('Nieprawidłowy typ połączenia.')
+    return result
 
 def version(value):
     if not isinstance(value,str) or not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}',value):raise ValueError('Wersja musi mieć postać 0.8.0.')

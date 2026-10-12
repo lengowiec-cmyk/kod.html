@@ -1,15 +1,45 @@
 from pathlib import Path
-import json,uuid
+import json,uuid,sys
 from pdfmanager.dms.recovery import data_dir
 from pdfmanager.licensing import secure_storage
 from pdfmanager.remote.protocol import config_check
 
-def load_config():
-    installed=Path(__file__).resolve().parents[1]/'resources'/'management.json'
-    path=installed
-    if not path.is_file():return None
-    if path.stat().st_size>65536:raise ValueError('Konfiguracja administratora jest zbyt duża.')
-    return config_check(json.loads(path.read_text(encoding='utf-8')))
+def factory_path():
+    if getattr(sys,'frozen',False):
+        root=Path(sys.executable).resolve().parent
+        if root.name=='CLI':root=root.parent
+        path=root/'management.json'
+        if path.exists():return path,True
+    return Path(__file__).resolve().parents[1]/'resources'/'management.json',False
+
+def load_config(*,factory=None,folder=None):
+    """Bootstrap from owner's package once; pin authority in local DPAPI storage.
+
+    A copied update helper uses the saved pairing without a sidecar in its temp dir.
+    The initial package is the trust boundary and must come from the owner.
+    """
+    from pdfmanager.security.cache import CacheCipher
+    from pdfmanager.remote.deployment import verify_factory
+    from pdfmanager.remote.shared import is_link
+    from pdfmanager.pdf_engine.io_utils import atomic_write_bytes
+    path,signed=(Path(factory),True) if factory is not None else factory_path()
+    folder=Path(folder) if folder is not None else data_dir()/'management'
+    saved=folder/'paired-config.enc'
+    if not saved.exists() and not path.exists():return None
+    with RemoteState(folder)._lock():
+        cipher=CacheCipher(folder);previous=None
+        if is_link(saved) or is_link(path):raise ValueError('Konfiguracja połączenia nie może być odsyłaczem.')
+        if saved.exists():
+            if saved.stat().st_size>150000:raise ValueError('Zapisana konfiguracja jest zbyt duża.')
+            previous=config_check(json.loads(cipher.decrypt(saved.read_text(encoding='utf-8'))))
+        if not path.exists():return previous
+        with path.open('rb') as stream:raw=stream.read(65537)
+        if len(raw)>65536:raise ValueError('Konfiguracja administratora jest zbyt duża.')
+        data=json.loads(raw)
+        config=verify_factory(data) if signed or 'payload' in data else config_check(data)
+        if previous and previous['public_key']!=config['public_key']:raise ValueError('Próba zmiany właściciela połączenia została zablokowana.')
+        if previous!=config:atomic_write_bytes(saved,cipher.encrypt(json.dumps(config)).encode())
+        return config
 
 class RemoteState:
     def __init__(self,folder=None):

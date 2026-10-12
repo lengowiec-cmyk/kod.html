@@ -14,7 +14,7 @@
 ; PROGRAM pozostaje w pelni trojjezyczny niezaleznie od jezyka instalatora).
 
 #define MyAppName "Menedzer PDF"
-#define MyAppVersion "0.8.0"
+#define MyAppVersion "0.9.0"
 #define MyAppPublisher "PDFManager"
 #define MyAppExeName "PDFManager.exe"
 

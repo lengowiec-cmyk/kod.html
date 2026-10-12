@@ -41,13 +41,15 @@ class AdminWorkspace:
         with self.lock:return self._command(device,blocked,reason,update)
     def _command(self,device,blocked,reason='',update=None):
         if not self.key:raise ValueError('Odblokuj klucz administratora.')
-        uuid.UUID(device);items=self.devices();row=items[device];row['sequence']+=1;row['blocked']=bool(blocked)
+        from pdfmanager.remote.shared import scoped_target
+        device=str(uuid.UUID(device));target=scoped_target(self.web,'control',device+'.json')
+        items=self.devices();row=items[device];row['sequence']+=1;row['blocked']=bool(blocked)
         if update is None and blocked:row['block_generation']=row['sequence']
         issued=stamp();payload={'schema':1,'purpose':'control','device':device,'sequence':row['sequence'],'blocked':bool(blocked),'block_generation':row.get('block_generation',0),'reason':reason[:500],'issued':issued,'expires':issued+90*86400}
         if update:payload['update']=update
         envelope=sign(payload,self.key)
         # Persist the sequence before exposing a command; never reuse it after a crash.
-        self.save_devices(items);atomic_write_bytes(self.web/'control'/(device+'.json'),canonical(envelope));return envelope
+        self.save_devices(items);atomic_write_bytes(target,canonical(envelope));return envelope
     def grant(self,device,days):
         if not self.key or device not in self.devices():raise ValueError('Odblokuj klucz i wybierz instalację.')
         if not 1<=days<=3650:raise ValueError('Podaj okres od 1 do 3650 dni.')
@@ -56,7 +58,8 @@ class AdminWorkspace:
     def release(self,installer,release_version,url):
         installer=Path(installer);origin(url);version(release_version)
         if installer.suffix.lower()!='.exe' or not 1<=installer.stat().st_size<=MAX_INSTALLER:raise ValueError('Wybierz instalator Windows EXE do 512 MB.')
-        sha=digest(installer);target=self.web/'updates'/(sha+'.exe')
+        from pdfmanager.remote.shared import scoped_target
+        sha=digest(installer);target=scoped_target(self.web,'updates',sha+'.exe')
         if not target.exists():
             from pdfmanager.pdf_engine.io_utils import atomic_copy_file
             atomic_copy_file(installer,target)

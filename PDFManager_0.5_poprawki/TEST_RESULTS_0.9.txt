@@ -1,0 +1,45 @@
+PDFManager 0.9 — weryfikacja w środowisku Linux
+
+Pełny zestaw:
+QT_QPA_PLATFORM=offscreen XDG_CACHE_HOME=/tmp/pdfmanager-cache
+XDG_CONFIG_HOME=/tmp/pdm09-config XDG_DATA_HOME=/tmp/pdm09-data
+/workspace/pdfmanager-dev-venv/bin/python -m pytest -q -o faulthandler_timeout=40
+Wynik: 382 passed, 1 xfailed in 137.93s.
+Znany oczekiwany błąd OCR: rozpoznawanie wielkiej litery Ź jako Ż.
+
+Dodatkowe sprawdzenie kanału i aktualizacji:
+python -m pytest tests/test_shared_09.py tests/test_remote_08.py -q
+Wynik: 56 passed. Wszystkie te testy włączono następnie do końcowego pełnego
+zestawu 382 zaliczonych testów; nie są dodatkowymi 56 testami ponad ten wynik.
+
+Sprawdzono: zgłoszenie instalacji i podpisane potwierdzenie, blokadę,
+kod urządzenia, cofnięcie blokady, zachowanie stanu offline, zmianę montowania
+folderu, podpisaną aktualizację i SHA-256, odmowę wykonania przy błędzie
+antywirusa, podmianę pliku w czasie skanowania, obowiązkowy skan instalatora
+niezależny od ustawienia dokumentów oraz flagę -DisableRemediation.
+Próby wykonania i Defendera używają atrap; nie uruchomiono testowych EXE.
+
+Przekierowania control/updates/hello oraz nowego folderu kanału są odrzucane;
+syntetyczne dokumenty poza kanałem zachowują identyczne bajty. Dane parowania
+przetrwały restart i brak konfiguracji obok pomocnika. Zmiana klucza właściciela
+po przypięciu jest odrzucana. Sprawdzono kompletną paczkę aplikacji wraz z CLI,
+podpisaną konfigurację i wykluczenie znanych prywatnych plików oraz odsyłaczy.
+
+Uruchomiono rzeczywiste okno programu właściciela w PySide6 offscreen,
+ze skalowaniem 200%; wykonano zrzut z danymi demonstracyjnymi.
+GUI pracownika oraz dotychczasowe funkcje obejmuje pełny zestaw testów.
+
+git diff --check: bez błędów białych znaków.
+
+Nie wykonano testów rzeczywistego Windows, DPAPI, Defendera, Google Drive
+Desktop, sprzętu skanującego, instalatora Inno Setup ani gotowych Windows EXE.
+Wyniki nie są certyfikacją ani gwarancją braku nieznanych luk. Przed wdrożeniem
+potrzebna jest próba na testowym komputerze Windows i osobnym folderze Drive.
+
+Audyt zależności:
+XDG_CACHE_HOME=/tmp/pdfmanager-cache python -m pip_audit --local --progress-spinner off --format json
+Wynik końcowy: No known vulnerabilities found. 91 pakietów, 0 pominiętych.
+Raport: SECURITY_AUDIT_0.9.json. Początkowy audyt zgłosił luki w starszych
+narzędziach pip 25.0.1 i pytest 8.4.2. Podniesiono pip do 26.2 i pytest do
+9.0.3 oraz zapisano poprawione wersje w wymaganiach przygotowania projektu.
+Końcowy pełny zestaw uruchomiono już z pytest 9.0.3.

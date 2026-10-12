@@ -39,6 +39,9 @@ def apply(plan,config,device,*,wait=wait_windows,run=subprocess.run,restart=subp
     validate_plan(plan,config,device)
     with installer.open('rb') as stream:
         if stream.read(2)!=b'MZ':raise ValueError('Plik nie jest instalatorem Windows.')
+    from pdfmanager.security.antivirus import scan_installer
+    scan_installer(installer)
+    validate_plan(plan,config,device)
     result=run([str(installer),'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/DIR='+str(root)],timeout=600,check=False)
     if result.returncode not in (0,3010):raise RuntimeError('Instalator zakończył się błędem '+str(result.returncode))
     restart([str(root/'PDFManager.exe')],cwd=str(root));return update['version']

@@ -31,11 +31,15 @@ if errorlevel 1 (
     echo [BLAD] Budowanie PDFManagerCLI nie powiodlo sie.
     exit /b 1
 )
+xcopy /e /i /y dist\PDFManagerCLI dist\PDFManager\CLI >nul
+if errorlevel 1 exit /b 1
 
 REM Osobny aktualizator — klient nie jest programem administratora.
 pyinstaller packaging\pdfmanager_updater.spec --noconfirm
 if errorlevel 1 exit /b 1
 copy /y dist\PDFManagerUpdater.exe dist\PDFManager\PDFManagerUpdater.exe >nul
+if errorlevel 1 exit /b 1
+python packaging\write_build_manifest.py
 if errorlevel 1 exit /b 1
 
 REM --- Podpisanie cyfrowe (opcjonalne) ------------------------------------

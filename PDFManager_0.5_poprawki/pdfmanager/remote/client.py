@@ -15,6 +15,9 @@ class RedirectPolicy(HTTPRedirectHandler):
         return super().redirect_request(req,fp,code,msg,headers,newurl)
 
 def opener(config):
+    if config.get('transport')=='shared_folder':
+        from pdfmanager.remote.shared import FolderTransport
+        return FolderTransport(config)
     context=ssl.create_default_context()
     if config.get('extra_ca_pem'):context.load_verify_locations(cadata=config['extra_ca_pem'])
     return build_opener(RedirectPolicy(config['base_url']),HTTPSHandler(context=context))

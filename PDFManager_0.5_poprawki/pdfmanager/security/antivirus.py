@@ -12,6 +12,18 @@ def executable():
 
 _trusted_paths={}
 
+def scan_installer(path):
+    """Mandatory for automatic Windows updates; no remediation of shared files."""
+    if os.name!='nt':return 'Unavailable on this platform'
+    path=Path(path)
+    if not path.is_file() or not 1<=path.stat().st_size<=512*1024*1024:raise ValueError('Nieprawidłowy instalator aktualizacji.')
+    tool=executable()
+    if tool is None:raise ValueError('Automatyczna aktualizacja została wstrzymana: Windows Defender jest niedostępny.')
+    from pdfmanager.dms.jobs import run_process
+    result=run_process([str(tool),'-Scan','-ScanType','3','-File',str(path.resolve()),'-DisableRemediation'],timeout=180)
+    if result.returncode:raise ValueError('Aktualizacja została wstrzymana: skan antywirusowy nie zakończył się pomyślnie.')
+    return 'Scanned'
+
 def scan(path):
     if os.name!='nt':return 'Unavailable on this platform'
     from pdfmanager.dms.preferences import Preferences

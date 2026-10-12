@@ -1,3 +1,15 @@
+# PDFManager 0.9 — paczka przygotowana przed przekazaniem pracownikom
+
+Połączenie z osobnym programem właściciela przez wydzielony kanał Google Drive.
+Pracownik uruchamia cały rozpakowany PDFManager bez wpisywania kodu parowania.
+Menu i funkcje edycji pozostają. Wzmocniono kontrolę ścieżek i aktualizacji.
+
+- [Przygotowanie paczki i zabezpieczenia](README_0.9.md)
+- [Wyniki testów](TEST_RESULTS_0.9.txt)
+- [Pełny projekt 0.9 w ZIP](../downloads/PDFManager_0.9_pelny_projekt.zip)
+
+Poniżej pozostają opisy wcześniejszych wydań.
+
 # PDFManager 0.8 — połączenie wbudowane, osobny program „matka”
 
 Menu i układ PDFManagera pozostają. Usunięto dedykację i przycisk aktywacji;
