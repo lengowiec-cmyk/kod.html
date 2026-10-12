@@ -1,11 +1,11 @@
-........................................................................ [ 26%]
-........................................................................ [ 52%]
-........................................................................ [ 78%]
-..............................................x.............             [100%]
-=============================== warnings summary ===============================
-tests/test_workflows.py::test_signature_with_ephemeral_certificate
-  /workspace/pdfmanager-dev-venv/lib/python3.12/site-packages/pyhanko_certvalidator/registry.py:305: DeprecationWarning: Relying on the operating system's trust list is deprecated and will stop working in a future release; pass 'trust_roots' explicitly
-    warnings.warn(
+PDFManager 0.6 — testy Linux, 12.10.2026
 
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-275 passed, 1 xfailed, 1 warning in 29.82s
+........................................................................ [ 24%]
+........................................................................ [ 48%]
+........................................................................ [ 72%]
+....................................................................x... [ 96%]
+..........                                                               [100%]
+297 passed, 1 xfailed in 131.27s (0:02:11)
+
+58 zależności runtime: brak znanych podatności w przebiegu pip-audit.
+Windows: sprzęt, Defender, DPAPI, Job Object oraz gotowy instalator wymagają weryfikacji na Windows.

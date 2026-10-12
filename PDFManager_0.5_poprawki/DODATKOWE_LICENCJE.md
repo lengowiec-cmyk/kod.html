@@ -28,3 +28,8 @@ Kod sprawdza identyfikatory blobów z tej wersji, z zachowaniem weryfikacji TLS.
 Własne ikony nie są kopią grafik FileCenter. Ocena całego wyglądu/brandingu
 przed komercyjną publikacją jest osobnym krokiem; nie deklaruje się gwarancji
 prawnej „identyczne 1:1 i bez naruszeń”.
+
+## Dodatek 0.6
+
+zxing-cpp (ZXing C++): Apache-2.0; używany do odczytu kodów QR i 1D/2D.
+Nowe grafiki są własnymi rysunkami wektorowymi PDFManagera.

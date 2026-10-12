@@ -11,11 +11,12 @@ class Trash:
     def put(self,path):
         path=Path(path).resolve();folder=self.root/uuid.uuid4().hex;folder.mkdir()
         try:
-            atomic_write_bytes(folder/'info.json',json.dumps({'source':str(path),'name':path.name},ensure_ascii=False).encode('utf-8'))
-            transfer_file(path,folder/path.name,move=True)
+            atomic_write_bytes(folder/'info.json',json.dumps({'source':str(path),'name':path.name+'.pdm'},ensure_ascii=False).encode('utf-8'))
+            from pdfmanager.security.cache import crypt_file
+            crypt_file(path,folder/(path.name+'.pdm'));path.unlink()
         except Exception:
             # Keep any completed copy when source removal failed.
-            if not (folder/path.name).exists():
+            if not (folder/(path.name+'.pdm')).exists():
                 import shutil
                 shutil.rmtree(folder)
             raise
@@ -31,6 +32,13 @@ class Trash:
     def restore(self,folder,destination=None):
         entry=next(e for e in self.entries() if e[0]==Path(folder))
         target=Path(destination) if destination else entry[1]
-        target.parent.mkdir(parents=True,exist_ok=True);transfer_file(entry[2],target,move=True)
+        target.parent.mkdir(parents=True,exist_ok=True)
+        if target.exists():raise FileExistsError('Plik docelowy już istnieje.')
+        if entry[2].suffix.lower()=='.pdm':
+            from tempfile import TemporaryDirectory
+            from pdfmanager.security.cache import crypt_file
+            with TemporaryDirectory(prefix='pdfmanager-restore-') as temporary:
+                readable=Path(temporary)/'restored';crypt_file(entry[2],readable,decrypt=True);transfer_file(readable,target)
+        else:transfer_file(entry[2],target,move=True)
         import shutil
         shutil.rmtree(entry[0]);return target

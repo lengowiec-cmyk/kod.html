@@ -34,3 +34,11 @@ Próba ręczna:
 
 Nie wykonano tych prób sprzętowych w środowisku chmurowym Linux. Skrypt i
 lista umożliwiają ich wykonanie na komputerze użytkownika; nie zastępują wyników.
+
+## Dodatkowe próby wersji 0.6
+
+- Sprawdź uruchamianie procesów PDF w obu EXE oraz odrzucanie operacji przy braku limitów Job Object.
+- Zweryfikuj integrację Defendera i zachowanie przy braku jego narzędzia.
+- Zamknij dokument bez zapisu, odzyskaj zaszyfrowaną kopię i sprawdź kosz oraz migrację starszych kopii.
+- Sprawdź profile skanów, prawdziwy kod QR, podział po kodach i reguły kopiowania do szafek.
+- Sprawdź wszystkie osiem zakładek, ustawienia, wydatki oraz eksport CSV.

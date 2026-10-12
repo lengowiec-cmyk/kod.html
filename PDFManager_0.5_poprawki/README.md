@@ -1,29 +1,19 @@
-# PDFManager 0.5
+# PDFManager 0.6
 
-Aplikacja desktopowa Python / PySide6: edycja PDF, OCR, szafki DMS i import skanów.
+Centrum dokumentów: szafki, skrzynka przychodząca, edycja PDF, skanowanie,
+OCR, reguły automatyzacji, kody kreskowe i ewidencja wydatków.
 
-## Uruchomienie na Windows
+**[Instrukcja wersji 0.6](README_0.6.md)** · [Przewodnik PDF](docs/PDFManager_0.6_instrukcja.pdf) · [Mapa funkcji](FUNKCJE_0.6.md) ·
+[Zabezpieczenia i ograniczenia](BEZPIECZENSTWO_0.6.md)
 
-Z terminala w tym katalogu:
+[Podgląd szafek](previews_0.6/01_szafki.png) ·
+[Ustawienia](previews_0.6/05_ustawienia.png) ·
+[Profile](previews_0.6/07_profile.png)
 
-```powershell
-py -m venv .venv
-.venv\Scripts\python -m pip install -r requirements.txt
-.venv\Scripts\python -m pdfmanager.main
-```
+Projekt rozwija wersję poprawioną przez Claude, dlatego zachowano nazwę
+katalogu PDFManager_0.5_poprawki. Kod wewnątrz jest aktualną wersją 0.6.
+Pliki README_ROZBUDOWA.md i ZMIANY_0.5.md opisują historię wcześniejszej wersji.
 
-Program zachowuje istniejący mechanizm licencji PDFManager.
-
-- [Pełna instrukcja](README_ROZBUDOWA.md)
-- [Nowe funkcje 0.5 i ograniczenia](ZMIANY_0.5.md)
-- [Szafki DMS](MODUL_DMS.md)
-- [Sprawdzenie na Windows](tools/CHECK_WINDOWS.md)
-- [Budowanie EXE i instalatora](packaging/BUILD_INSTRUCTIONS.md)
-- [Wyniki testów](TEST_RESULTS.txt)
-- [Wymagania licencyjne](LICENSING.md)
-
-Źródła, testy i konfiguracja instalatora są dostępne w tym katalogu.
-Gotowy instalator Windows nie został zbudowany ani zweryfikowany w środowisku Linux.
-Kod funkcji inspirowanych KillerPDF został napisany niezależnie; nie skopiowano
-jego kodu GPL ani zasobów FileCenter. Dystrybucja z zamkniętym kodem wymaga
-rozstrzygnięcia licencji PyMuPDF zgodnie z LICENSING.md.
+Aby zbudować EXE, postępuj według README_0.6.md. Gotowy instalator Windows nie
+został zbudowany w środowisku Linux. Mechanizm aktywacji programu zachowano.
+Wymagania prawne zależności pozostają opisane w LICENSING.md.

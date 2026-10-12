@@ -1,0 +1,11 @@
+PDFManager 0.6 — testy Linux, 12.10.2026
+
+........................................................................ [ 24%]
+........................................................................ [ 48%]
+........................................................................ [ 72%]
+....................................................................x... [ 96%]
+..........                                                               [100%]
+297 passed, 1 xfailed in 131.27s (0:02:11)
+
+58 zależności runtime: brak znanych podatności w przebiegu pip-audit.
+Windows: sprzęt, Defender, DPAPI, Job Object oraz gotowy instalator wymagają weryfikacji na Windows.

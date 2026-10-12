@@ -13,7 +13,12 @@ listą ostrzeżeń (`EditResult.warnings`), gdy zachowanie układu nie jest
 gwarantowane (patrz `KNOWN LIMITATIONS` poniżej).
 """
 from __future__ import annotations
+
+from pdfmanager.security.limits import pixmap as limited_pixmap
+
+from pdfmanager.security.limits import safe_open
 from uuid import uuid4
+from pdfmanager.security.isolation import engine_method
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -69,18 +74,21 @@ class TextEditEngine(ABC):
     """Interfejs silnika edycji istniejącego tekstu — patrz docstring modułu."""
 
     @abstractmethod
+    @engine_method
     def extract_spans(self, path: Path, page_index: int) -> list[TextSpan]:
         """Zwraca wszystkie fragmenty tekstu na danej stronie."""
 
     @abstractmethod
+    @engine_method
     def apply_edit(self, path: Path, span: TextSpan, new_text: str, *, style: TextSpan | None = None, font_file: Path | None = None) -> EditResult:
         """Zamienia tekst fragmentu `span` na `new_text` i zapisuje dokument."""
 
 
 class PyMuPDFTextEditBackend(TextEditEngine):
+    @engine_method
     def extract_spans(self, path: Path, page_index: int) -> list[TextSpan]:
         path = Path(path)
-        doc = pymupdf.open(str(path))
+        doc = safe_open(str(path))
         try:
             page = doc[page_index]
             data = page.get_text("dict")
@@ -116,6 +124,7 @@ class PyMuPDFTextEditBackend(TextEditEngine):
         finally:
             doc.close()
 
+    @engine_method
     def apply_edit(self, path: Path, span: TextSpan, new_text: str, *, style: TextSpan | None = None, font_file: Path | None = None) -> EditResult:
         path = Path(path)
         if not new_text:
@@ -208,7 +217,7 @@ class PyMuPDFTextEditBackend(TextEditEngine):
     @staticmethod
     def _detect_background_color(page, rect: "pymupdf.Rect", zoom: float = 3.0) -> tuple[tuple[float, float, float], bool]:
         try:
-            pix = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), clip=rect)
+            pix = limited_pixmap(page,matrix=pymupdf.Matrix(zoom, zoom), clip=rect)
         except Exception:
             return (1.0, 1.0, 1.0), False
 

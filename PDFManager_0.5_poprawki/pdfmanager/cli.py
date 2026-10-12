@@ -9,6 +9,9 @@ from pdfmanager.pdf_engine import page_ops
 
 
 def main(argv=None) -> int:
+    if argv is None and len(sys.argv)>2 and sys.argv[1]=='--pdf-worker':
+        from pdfmanager.security.worker import main as worker_main
+        return worker_main(sys.argv[2])
     parser=argparse.ArgumentParser(prog='PDFManager',description='Lokalne operacje PDF. Oryginały pozostają niezmienione.')
     commands=parser.add_subparsers(dest='command',required=True)
     p=commands.add_parser('merge');p.add_argument('output',type=Path);p.add_argument('inputs',type=Path,nargs='+')
@@ -30,6 +33,7 @@ def main(argv=None) -> int:
     else:
         app=QCoreApplication.instance() or QCoreApplication(['PDFManager'])
     app.setOrganizationName('PDFManager');app.setApplicationName('PDFManager')
+    from pdfmanager.security.isolation import call as document_call
     try:
         from pdfmanager.licensing.license_manager import get_default_license_manager
         if get_default_license_manager().get_status().is_blocked:
@@ -38,11 +42,11 @@ def main(argv=None) -> int:
         if cmd=='merge':ops.merge_inputs(args.inputs,args.output)
         elif cmd=='extract-pages':
             ops._check_output(args.input,args.output)
-            with ops.open_pdf(args.input) as doc:indices=ops.parse_pages(args.pages,len(doc))
+            indices=ops.parse_pages(args.pages,document_call('document.info',args.input)['pages'])
             page_ops.extract_pages(args.input,indices,args.output)
         elif cmd=='split':
             args.output_dir.mkdir(parents=True,exist_ok=True)
-            with ops.open_pdf(args.input) as doc:count=len(doc)
+            count=document_call('document.info',args.input)['pages']
             targets=[args.output_dir/f'{args.input.stem}_part{i+1}.pdf' for i in range(count)]
             if any(p.exists() for p in targets):raise ops.WorkflowError('Wybierz pusty folder docelowy.')
             page_ops.split_at(args.input,list(range(count-1)),args.output_dir,args.input.stem)
@@ -50,7 +54,7 @@ def main(argv=None) -> int:
             password=sys.stdin.readline().rstrip('\r\n') if args.password_stdin else getpass.getpass('Hasło PDF: ')
             ops.resave(args.input,args.output,password=password)
         elif cmd=='to-image':
-            with ops.open_pdf(args.input) as doc:indices=ops.parse_pages(args.pages,len(doc))
+            indices=ops.parse_pages(args.pages,document_call('document.info',args.input)['pages'])
             export_images(args.input,args.output_dir,indices,args.dpi,args.format)
         elif cmd=='flatten':flatten_document(args.input,args.output,args.dpi)
         elif cmd=='ocr':ops.ocr_document(args.input,args.output,args.lang,args.dpi,args.text)
@@ -68,7 +72,7 @@ def main(argv=None) -> int:
                 printer.setPrinterName(args.printer)
             elif not QPrinterInfo.defaultPrinterName():raise ops.WorkflowError('Brak drukarki domyślnej. Wybierz --printer lub --output.')
             printer.setCopyCount(args.copies)
-            with ops.open_pdf(args.input) as doc:indices=ops.parse_pages(args.pages,len(doc))
+            indices=ops.parse_pages(args.pages,document_call('document.info',args.input)['pages'])
             paint_document(printer,args.input,indices)
         elif cmd=='watermark':stamp_document(args.input,args.output,args.text,args.numbers)
         elif cmd=='batch-resave':

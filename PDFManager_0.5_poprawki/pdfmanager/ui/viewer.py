@@ -1,6 +1,8 @@
 """Widżet podglądu jednego dokumentu PDF (jedna karta w QTabWidget)."""
 from __future__ import annotations
 
+from pdfmanager.security.limits import safe_open
+
 from pathlib import Path
 from typing import Callable, TypeVar
 
@@ -213,14 +215,18 @@ class PdfViewerWidget(QWidget):
         self._thumbnail_timer.timeout.connect(self._render_next_thumbnail)
         self._thumbnail_cursor = 0
 
+        self.load_error=''
         try:
             self._doc = PdfDocument(self.path)
-        except Exception as exc:  # otwarcie uszkodzonego/niepoprawnego PDF
-            self.load_failed.emit(str(self.path), str(exc))
+            self._refresh_thumbnails()
+            self._render_current_page()
+        except Exception as exc:
+            self.load_error=str(exc)
+            self._thumbnail_timer.stop()
+            if self._doc:self._doc.close()
+            self._doc=None
+            self.load_failed.emit(str(self.path),self.load_error)
             return
-
-        self._refresh_thumbnails()
-        self._render_current_page()
 
     @property
     def page_count(self) -> int:
@@ -299,7 +305,9 @@ class PdfViewerWidget(QWidget):
             return
         i = self._thumbnail_cursor
         width, height = self._doc.page_size_points(i)
-        image = self._doc.render_page(i, min(90/width, 120/height))
+        try:image = self._doc.render_page(i, min(90/width, 120/height))
+        except Exception as exc:
+            self._thumbnail_timer.stop();self.load_failed.emit(str(self.path),str(exc));return
         self._thumbnails.item(i).setIcon(self._page_icon(image))
         self._thumbnail_cursor += 1
 
@@ -453,7 +461,11 @@ class PdfViewerWidget(QWidget):
                 x0,y0,x1,y1=link['from']
                 if x0<=x<=x1 and y0<=y<=y1:
                     if link.get('page',-1)>=0:self.go_to_page(link['page'])
-                    elif link.get('uri') and QUrl(link['uri']).scheme() in ('http','https'):QDesktopServices.openUrl(QUrl(link['uri']))
+                    elif link.get('uri'):
+                        url=QUrl(link['uri'])
+                        if url.isValid() and url.scheme() in ('http','https') and url.host() and not url.userInfo():
+                            encoded=bytes(url.toEncoded()).decode('ascii','replace')
+                            if QMessageBox.question(self,'Link z dokumentu',f'Otworzyć zewnętrzną stronę?\n{encoded[:1800]}\nSprawdź adres przed podaniem danych.')==QMessageBox.Yes:QDesktopServices.openUrl(url)
                     return
             for annot in annotations.list_annotations(self.path,self.current_page):
                 x0,y0,x1,y1=annot.rect
@@ -491,7 +503,7 @@ class PdfViewerWidget(QWidget):
             from pdfmanager.pdf_engine.content import insert_content_at
             import pymupdf
             options=self.pending_content
-            with pymupdf.open(self.path) as doc:display_rect=pymupdf.Rect(rect)*doc[self.current_page].rotation_matrix
+            display_rect=pymupdf.Rect(rect)*self._doc.rotation_matrix(self.current_page)
             try:
                 self._mutate_file(lambda:insert_content_at(self.path,self.current_page,tuple(display_rect),**options))
                 self.pending_content=None;self.set_active_tool(TOOL_SELECT)
@@ -517,8 +529,8 @@ class PdfViewerWidget(QWidget):
             from pdfmanager.pdf_engine import workflows
             if self.active_tool=='copy_region':
                 import pymupdf
-                with pymupdf.open(self.path) as doc:
-                    text=doc[self.current_page].get_text('text',clip=pymupdf.Rect(rect),sort=True)
+                from pdfmanager.security.isolation import call
+                text=call('document.text_region',self.path,self.current_page,rect)
                 QApplication.clipboard().setText(text)
             elif self.active_tool=='ocr_region':
                 self.ocr_region_requested.emit(rect)

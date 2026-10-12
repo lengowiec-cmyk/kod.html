@@ -38,12 +38,8 @@ class CabinetTools:
         try:path=self.store.create_client(self.active['root'],name,template);self.window._on_folder_selected(str(path))
         except Exception as exc:self.error(exc)
     def template(self):
-        name,ok=QInputDialog.getText(self.window,'Szablon folderów','Nazwa szablonu:')
-        if not ok:return
-        folders,ok=QInputDialog.getMultiLineText(self.window,'Szablon folderów','Podfoldery: jeden na linię, np. Umowy/2026')
-        if not ok:return
-        try:self.store.save_template(name,[f.strip() for f in folders.splitlines() if f.strip()])
-        except Exception as exc:self.error(exc)
+        from .folder_templates import FolderTemplatesDialog
+        FolderTemplatesDialog(self.window,self.active['root'] if self.active else None).exec()
     def scans(self):
         inputs,_=QFileDialog.getOpenFileNames(self.window,'Pliki ze skanera','','Skany (*.pdf *.png *.jpg *.jpeg *.tif *.tiff *.bmp *.webp)')
         if not inputs:return

@@ -11,6 +11,8 @@ a otworzyć go ponownie PO zapisie.
 """
 from __future__ import annotations
 
+from pdfmanager.security.limits import safe_open
+
 from pathlib import Path
 from typing import Callable, TypeVar
 
@@ -50,7 +52,7 @@ def mutate_pdf_file(path: Path, mutate: Callable[[pymupdf.Document], T]) -> T:
     otwórz -> zmutuj w pamięci -> zserializuj -> ZAMKNIJ -> zapisz atomowo.
     """
     path = Path(path)
-    doc = pymupdf.open(str(path))
+    doc = safe_open(str(path))
     try:
         result = mutate(doc)
         data = doc.tobytes(garbage=3, deflate=True)
@@ -62,7 +64,7 @@ def mutate_pdf_file(path: Path, mutate: Callable[[pymupdf.Document], T]) -> T:
 
 def new_pdf_file(path: Path, build: Callable[[pymupdf.Document], None]) -> None:
     """Tworzy nowy dokument PDF od zera, wypełnia go `build(doc)` i zapisuje atomowo."""
-    doc = pymupdf.open()
+    doc = safe_open()
     try:
         build(doc)
         data = doc.tobytes(garbage=3, deflate=True)

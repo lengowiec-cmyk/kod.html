@@ -3,6 +3,10 @@
 Export operations preserve the input and close all file handles before saving.
 """
 from __future__ import annotations
+
+from pdfmanager.security.limits import pixmap as limited_pixmap
+
+from pdfmanager.security.limits import safe_open
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -23,7 +27,7 @@ class WorkflowError(ValueError):
 
 
 def open_pdf(source: Path, password: str = '') -> pymupdf.Document:
-    doc = pymupdf.open(source)
+    doc = safe_open(source)
     if doc.needs_pass and not doc.authenticate(password):
         doc.close()
         raise WorkflowError('Dokument wymaga poprawnego hasła.')
@@ -111,23 +115,34 @@ def merge_inputs(paths: list[Path], output: Path) -> None:
             raise WorkflowError('Przekroczono limit 512 MB wejścia.')
         suffix = Path(name).suffix.lower()
         if suffix == '.pdf':
-            with pymupdf.open(stream=data, filetype='pdf') as doc:
+            with safe_open(stream=data, filetype='pdf') as doc:
                 if doc.needs_pass:
                     raise WorkflowError(f'Plik {Path(name).name} wymaga hasła.')
                 out.insert_pdf(doc, widgets=True)
         elif suffix in ('.png','.jpg','.jpeg','.tif','.tiff','.bmp','.webp'):
             with Image.open(io.BytesIO(data)) as image:
+                from pdfmanager.security.limits import check_pixels
+                check_pixels(image.width,image.height)
                 from pdfmanager.dms.jobs import checkpoint
                 for frame in range(getattr(image, 'n_frames', 1)):
                     checkpoint(frame,getattr(image,'n_frames',1),'Przetwarzanie obrazu')
                     image.seek(frame)
                     rgb = ImageOps.exif_transpose(image).convert('RGB')
                     stream = io.BytesIO();rgb.save(stream, format='PNG')
-                    page = out.new_page(width=rgb.width*.75, height=rgb.height*.75)
+                    density=image.info.get('dpi');known_density=density is not None
+                    try:
+                        dx,dy=float(density[0]),float(density[1])
+                        if not (72<=dx<=600 and 72<=dy<=600):dx=dy=150;known_density=False
+                    except (TypeError,ValueError,IndexError):dx=dy=150;known_density=False
+                    width,height=rgb.width*72/dx,rgb.height*72/dy
+                    if not known_density or min(dx,dy)<=96:
+                        max_width,max_height=(842,595) if width>height else (595,842)
+                        scale=min(1,max_width/width,max_height/height);width*=scale;height*=scale
+                    page = out.new_page(width=width, height=height)
                     page.insert_image(page.rect, stream=stream.getvalue())
         else:
             raise WorkflowError(f'Nieobsługiwany format: {suffix}')
-    with pymupdf.open() as out:
+    with safe_open() as out:
         from pdfmanager.dms.jobs import checkpoint
         for position,path in enumerate(paths):
             checkpoint(position,len(paths),'Scalanie: '+Path(path).name)
@@ -141,6 +156,9 @@ def merge_inputs(paths: list[Path], output: Path) -> None:
                     append(out, item.name, item.read_bytes())
             elif path.suffix.lower() == '.zip':
                 with zipfile.ZipFile(path) as archive:
+                    entries=archive.infolist()
+                    if len(entries)>2000:raise WorkflowError('Archiwum przekracza limit 2000 elementów.')
+                    if any(e.file_size>50*1024*1024 and e.file_size>max(1,e.compress_size)*200 for e in entries):raise WorkflowError('Podejrzany stopień kompresji archiwum.')
                     for entry in sorted(archive.infolist(), key=lambda e: e.filename):
                         if entry.is_dir() or Path(entry.filename).suffix.lower() not in ('.pdf','.png','.jpg','.jpeg','.tif','.tiff','.bmp','.webp'):
                             continue
@@ -173,7 +191,7 @@ def resize_document(source: Path, output: Path, width: float, height: float) -> 
     _check_output(source, output)
     if not all(math.isfinite(v) and 72 <= v <= 14400 for v in (width,height)):
         raise WorkflowError('Wymiary strony muszą wynosić 72–14400 punktów.')
-    with open_pdf(source) as doc, pymupdf.open() as out:
+    with open_pdf(source) as doc, safe_open() as out:
         for page in doc:
             target = out.new_page(width=width,height=height)
             target.show_pdf_page(target.rect, doc, page.number, keep_proportion=True)
@@ -217,9 +235,9 @@ def transform_image(image: Image.Image, operation: str, value=0) -> Image.Image:
 def transform_pdf(source: Path, output: Path, operation: str, value=0, dpi: int = 150) -> None:
     _check_output(source,output)
     if not 72 <= dpi <= 600:raise WorkflowError('DPI: 72–600.')
-    with open_pdf(source) as doc, pymupdf.open() as out:
+    with open_pdf(source) as doc, safe_open() as out:
         for page in doc:
-            pix = page.get_pixmap(dpi=dpi, colorspace=pymupdf.csRGB, alpha=False)
+            pix = limited_pixmap(page,dpi=dpi, colorspace=pymupdf.csRGB, alpha=False)
             image = Image.frombytes('RGB',(pix.width,pix.height),pix.samples)
             effective_value = [(x*image.width,y*image.height) for x,y in value] if operation=='perspective_normalized' else value
             image = transform_image(image,'perspective' if operation=='perspective_normalized' else operation,effective_value)
@@ -252,7 +270,7 @@ def ocr_document(source: Path, output: Path, language='eng', dpi=200, text_only=
     if any(lang not in available for lang in language.split('+')):raise WorkflowError('Brak wybranego modelu językowego Tesseract.')
     if not 72 <= dpi <= 600:raise WorkflowError('DPI: 72–600.')
     texts=[]
-    with TemporaryDirectory(prefix='pdfmanager-ocr-') as folder, open_pdf(source) as doc, pymupdf.open() as out:
+    with TemporaryDirectory(prefix='pdfmanager-ocr-') as folder, open_pdf(source) as doc, safe_open() as out:
         folder=Path(folder)
         from .ocr_models import native_model_dir, model_dir, verify_model, MODEL_BLOBS
         native=native_model_dir(tesseract_executable())
@@ -273,7 +291,7 @@ def ocr_document(source: Path, output: Path, language='eng', dpi=200, text_only=
             page=doc[i]
             clip=(pymupdf.Rect(region)*page.rotation_matrix) if region else None
             if clip and (clip.is_empty or not page.rect.contains(clip)):raise WorkflowError('Obszar OCR musi leżeć wewnątrz strony.')
-            pix=page.get_pixmap(dpi=dpi,colorspace=pymupdf.csRGB,alpha=False,clip=clip)
+            pix=limited_pixmap(page,dpi=dpi,colorspace=pymupdf.csRGB,alpha=False,clip=clip)
             png=folder/'input.png';pix.save(png)
             dest=folder/'result'
             command=[tesseract_executable(),str(png),str(dest),'--tessdata-dir',str(models),'-l',language,'--dpi',str(dpi),'-c','tessedit_create_txt=1' if text_only else 'tessedit_create_pdf=1']
@@ -281,7 +299,7 @@ def ocr_document(source: Path, output: Path, language='eng', dpi=200, text_only=
             if result.returncode:raise WorkflowError(f'OCR nie powiodło się: {result.stderr[-1000:]}')
             if text_only:texts.append(dest.with_suffix('.txt').read_text(encoding='utf-8'))
             else:
-                with pymupdf.open(dest.with_suffix('.pdf')) as recognized:out.insert_pdf(recognized)
+                with safe_open(dest.with_suffix('.pdf')) as recognized:out.insert_pdf(recognized)
         checkpoint(len(selected),len(selected),'Zapis wyniku OCR')
         data='\n\n'.join(texts).encode('utf-8') if text_only else out.tobytes(garbage=3,deflate=True)
     atomic_write_bytes(output,data)
@@ -351,8 +369,8 @@ def compare_documents(left: Path, right: Path) -> list[dict]:
         for i in range(max(len(a),len(b))):
             if i>=len(a) or i>=len(b):
                 result.append({'page':i+1,'status':'missing-left' if i>=len(a) else 'missing-right','difference':100.0});continue
-            image_a=a[i].get_pixmap(dpi=72,colorspace=pymupdf.csRGB,alpha=False)
-            image_b=b[i].get_pixmap(dpi=72,colorspace=pymupdf.csRGB,alpha=False)
+            image_a=limited_pixmap(a[i],dpi=72,colorspace=pymupdf.csRGB,alpha=False)
+            image_b=limited_pixmap(b[i],dpi=72,colorspace=pymupdf.csRGB,alpha=False)
             if (image_a.width,image_a.height)!=(image_b.width,image_b.height):
                 result.append({'page':i+1,'status':'different-size','difference':100.0});continue
             aa=np.frombuffer(image_a.samples,dtype=np.uint8).reshape(-1,3)
@@ -378,7 +396,11 @@ def add_attachment(source: Path, output: Path, attachment: Path) -> None:
 
 def extract_attachment(source: Path, name: str, output: Path) -> None:
     _check_output(source,output)
-    with open_pdf(source) as doc:data=doc.embfile_get(name)
+    with open_pdf(source) as doc:
+        info=doc.embfile_info(name)
+        if info.get('size',0)>50*1024*1024:raise WorkflowError('Załącznik przekracza limit 50 MB.')
+        data=doc.embfile_get(name)
+        if len(data)>50*1024*1024:raise WorkflowError('Załącznik przekracza limit 50 MB.')
     atomic_write_bytes(output,data)
 
 
@@ -418,14 +440,18 @@ def nup_document(source: Path, output: Path, per_sheet: int = 2, indices: list[i
     columns,rows=layouts[per_sheet]
     width,height=(842,595) if per_sheet==2 else (595,842)
     margin=18;cell_width=(width-2*margin)/columns;cell_height=(height-2*margin)/rows
-    with open_pdf(source) as doc,pymupdf.open() as out:
+    with open_pdf(source) as doc,safe_open() as out:
         chosen=indices if indices is not None else list(range(len(doc)))
         if not chosen or any(not 0<=i<len(doc) for i in chosen):raise WorkflowError('Nieprawidłowe strony.')
         for offset in range(0,len(chosen),per_sheet):
             target=out.new_page(width=width,height=height)
             for cell,index in enumerate(chosen[offset:offset+per_sheet]):
                 x=margin+(cell%columns)*cell_width;y=margin+(cell//columns)*cell_height
-                pix=doc[index].get_pixmap(dpi=200,colorspace=pymupdf.csRGB,alpha=False,annots=True)
+                pix=limited_pixmap(doc[index],dpi=200,colorspace=pymupdf.csRGB,alpha=False,annots=True)
                 target.insert_image(pymupdf.Rect(x,y,x+cell_width-6,y+cell_height-6),stream=pix.tobytes('png'),keep_proportion=True)
         data=out.tobytes(garbage=3,deflate=True)
     atomic_write_bytes(output,data)
+
+from pdfmanager.security.isolation import enable_module_isolation
+ISOLATED_FUNCTIONS=['export_text', 'resave', 'batch_resave', 'merge_inputs', 'crop_document', 'resize_document', 'transform_pdf', 'ocr_document', 'form_fields', 'fill_form', 'bookmarks', 'set_bookmarks', 'redact', 'add_ink', 'compare_documents', 'attachment_names', 'add_attachment', 'extract_attachment', 'sign_pkcs12', 'verify_signatures', 'nup_document']
+enable_module_isolation(__name__,globals(),ISOLATED_FUNCTIONS)

@@ -27,7 +27,7 @@ def test_working_copy_recovery_conflict_and_backup(tmp_path):
     target=tmp_path/'new.pdf';copy.save(target)
     assert 'Edited' in pymupdf.open(target)[0].get_text()
     copy.path.write_bytes(before);copy.changed();copy.save()
-    assert len(list((tmp_path/'backups').glob('*.pdf')))==1
+    assert len(list((tmp_path/'backups').glob('*.pdm')))==1
     assert recoverable(tmp_path/'recovery')==[]
     copy.close();assert not copy.folder.exists()
 
@@ -36,7 +36,7 @@ def test_backup_retention_prunes_oldest_copies_per_file(tmp_path):
     copy=WorkingCopy(source,tmp_path/'recovery')
     for i in range(8):
         pdf(copy.path,f'Edit {i}');copy.changed();copy.save()
-    backups=sorted((tmp_path/'backups').glob('*_source.pdf'))
+    backups=sorted((tmp_path/'backups').glob('*_source.pdf.pdm'))
     from pdfmanager.dms.recovery import MAX_BACKUPS_PER_FILE
     assert len(backups)==MAX_BACKUPS_PER_FILE
     copy.close()
@@ -59,7 +59,8 @@ def test_trash_restore_conflict_preserves_deleted_copy(tmp_path):
     assert not source.exists() and len(trash.entries())==1
     source.write_bytes(b'new')
     with pytest.raises(FileExistsError):trash.restore(folder)
-    assert trash.entries()[0][2].read_bytes()==data
+    assert trash.entries()[0][2].read_bytes()!=data
+    assert trash.entries()[0][2].read_bytes().startswith(b'PDMENC1')
     target=tmp_path/'restored.pdf';trash.restore(folder,target)
     assert target.read_bytes()==data and source.read_bytes()==b'new' and trash.entries()==[]
 
@@ -290,7 +291,7 @@ def test_failed_save_does_not_prune_previous_backups(tmp_path,monkeypatch):
     with pytest.raises(OSError):copy.save()
     assert calls==[] and copy.dirty
     assert 'Original' in pymupdf.open(source)[0].get_text()
-    assert list((tmp_path/'backups').glob('*.pdf'))
+    assert list((tmp_path/'backups').glob('*.pdm'))
 
 def test_failed_working_copy_removes_incomplete_session(tmp_path,monkeypatch):
     import pdfmanager.dms.recovery as module
@@ -315,6 +316,6 @@ def test_backup_retention_separates_same_name_in_different_folders(tmp_path):
         copy=WorkingCopy(source,tmp_path/'recovery')
         for i in range(7):pdf(copy.path,f'{client} edit {i}');copy.changed();copy.save()
         copy.close()
-    backups=list((tmp_path/'backups').glob('*_contract.pdf'))
+    backups=list((tmp_path/'backups').glob('*_contract.pdf.pdm'))
     assert len(backups)==10
     assert len({p.name.split('_')[0] for p in backups})==2

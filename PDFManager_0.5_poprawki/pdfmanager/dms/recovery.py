@@ -9,7 +9,10 @@ from pdfmanager.pdf_engine.io_utils import atomic_write_bytes,atomic_copy_file
 
 def data_dir():
     root=Path(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppLocalDataLocation))/'PDFManager'
-    root.mkdir(parents=True,exist_ok=True);return root
+    root.mkdir(parents=True,exist_ok=True)
+    import os
+    os.chmod(root,0o700)
+    return root
 
 def digest(path):
     sha=hashlib.sha256()
@@ -54,7 +57,7 @@ class WorkingCopy:
             shutil.rmtree(self.folder,ignore_errors=True)
             raise
     def write_manifest(self):
-        atomic_write_bytes(self.folder/'session.json',json.dumps({'source':str(self.source),'file':self.path.name,'baseline':self.baseline,'dirty':self.dirty,'updated':datetime.now(timezone.utc).isoformat()},ensure_ascii=False).encode('utf-8'))
+        atomic_write_bytes(self.folder/'session.json',json.dumps({'pid':__import__('os').getpid(),'source':str(self.source),'file':self.path.name,'baseline':self.baseline,'dirty':self.dirty,'updated':datetime.now(timezone.utc).isoformat()},ensure_ascii=False).encode('utf-8'))
     def changed(self):self.dirty=True;self.write_manifest()
     def save(self,target=None,*,allow_conflict=False):
         target=Path(target or self.source).resolve()
@@ -66,17 +69,22 @@ class WorkingCopy:
             folder=self.root.parent/'backups';folder.mkdir(parents=True,exist_ok=True)
             import os
             document_id=hashlib.sha256(os.path.normcase(str(target)).encode('utf-8')).hexdigest()[:16]
-            backup=folder/(document_id+'_'+uuid.uuid4().hex+'_'+target.name);atomic_copy_file(target,backup)
+            backup=folder/(document_id+'_'+uuid.uuid4().hex+'_'+target.name+'.pdm')
+            from pdfmanager.security.cache import crypt_file
+            crypt_file(target,backup)
         atomic_copy_file(self.path,target)
         self.source=target;self.baseline=digest(target);self.dirty=False;self.write_manifest()
         if backup is not None:
-            try:prune_backups(folder,target.name,protected=backup,document_id=document_id)
+            try:prune_backups(folder,target.name+'.pdm',protected=backup,document_id=document_id)
             except OSError:
                 from pdfmanager.logging_setup import get_logger
                 get_logger(__name__).warning('Zapisano dokument, ale nie udało się uporządkować kopii zapasowych.',exc_info=True)
         return target
     def close(self):
         if not self.dirty and self.path.exists() and digest(self.path)!=self.baseline:self.changed()
+        if self.dirty and self.path.suffix.lower()!='.pdm':
+            from pdfmanager.security.cache import crypt_file
+            encrypted=self.path.with_name(self.path.name+'.pdm');crypt_file(self.path,encrypted);self.path.unlink();self.path=encrypted;self.write_manifest()
         if not self.dirty:
             import shutil
             shutil.rmtree(self.folder,ignore_errors=True)

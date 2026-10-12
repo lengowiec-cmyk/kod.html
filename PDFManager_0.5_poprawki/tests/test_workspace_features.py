@@ -24,7 +24,7 @@ def test_views_comparison_and_workspace(qapp,tmp_path):
     apply_theme(qapp,'light')
     a=tmp_path/'a.pdf';b=tmp_path/'b.pdf';pdf(a);pdf(b,'world')
     win=MainWindow();win.show();win.open_document(str(a));win.open_document(str(b))
-    assert win._shell.tabs.count()==6
+    assert win._shell.tabs.count()==8
     viewer=win._current_viewer()
     for mode in ('continuous','two','book','grid'):
         viewer.set_view_mode(mode);QTest.qWait(30)

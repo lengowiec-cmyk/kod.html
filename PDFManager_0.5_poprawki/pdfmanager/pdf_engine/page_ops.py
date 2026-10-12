@@ -7,6 +7,8 @@ jest wymagane dla poprawnego działania na Windows.
 """
 from __future__ import annotations
 
+from pdfmanager.security.limits import safe_open
+
 from pathlib import Path
 
 import pymupdf
@@ -93,7 +95,7 @@ def insert_pages_from(
     source_path = Path(source_path)
 
     def mutate(doc: pymupdf.Document) -> None:
-        src = pymupdf.open(str(source_path))
+        src = safe_open(str(source_path))
         try:
             from_page, to_page = page_range if page_range else (0, src.page_count - 1)
             doc.insert_pdf(src, from_page=from_page, to_page=to_page, start_at=at_index)
@@ -110,7 +112,7 @@ def extract_pages(path: Path, indices: list[int], output_path: Path) -> None:
     path = Path(path)
 
     def build(new_doc: pymupdf.Document) -> None:
-        src = pymupdf.open(str(path))
+        src = safe_open(str(path))
         try:
             for index in indices:
                 new_doc.insert_pdf(src, from_page=index, to_page=index)
@@ -126,7 +128,7 @@ def split_at(path: Path, split_after_pages: list[int], output_dir: Path, base_na
     10-stronicowego da części: strony 0-2, 3-5, 6-9."""
     path = Path(path)
     output_dir = Path(output_dir)
-    src = pymupdf.open(str(path))
+    src = safe_open(str(path))
     try:
         page_count = src.page_count
     finally:
@@ -146,7 +148,7 @@ def split_at(path: Path, split_after_pages: list[int], output_dir: Path, base_na
         output_path = output_dir / f"{base_name}_part{part_no}.pdf"
 
         def build(new_doc: pymupdf.Document, first=first, last=last) -> None:
-            src_doc = pymupdf.open(str(path))
+            src_doc = safe_open(str(path))
             try:
                 new_doc.insert_pdf(src_doc, from_page=first, to_page=last)
             finally:
@@ -167,10 +169,14 @@ def merge_documents(paths: list[Path], output_path: Path) -> None:
 
     def build(new_doc: pymupdf.Document) -> None:
         for source_path in paths:
-            src = pymupdf.open(str(source_path))
+            src = safe_open(str(source_path))
             try:
                 new_doc.insert_pdf(src)
             finally:
                 src.close()
 
     new_pdf_file(Path(output_path), build)
+
+from pdfmanager.security.isolation import enable_module_isolation
+ISOLATED_FUNCTIONS=['rotate_page', 'delete_page', 'duplicate_page', 'move_page', 'reorder_pages', 'insert_pages_from', 'extract_pages', 'split_at', 'merge_documents']
+enable_module_isolation(__name__,globals(),ISOLATED_FUNCTIONS)

@@ -10,20 +10,30 @@ from pdfmanager.i18n.translator import translator
 COLUMN_TYPE = 2
 
 
+class DocumentFileSystemModel(QFileSystemModel):
+    def headerData(self,section,orientation,role=Qt.DisplayRole):
+        if orientation==Qt.Horizontal and role==Qt.DisplayRole:
+            labels=['Nazwa','Rozmiar','Typ pliku','Data modyfikacji']
+            if 0<=section<len(labels):return labels[section]
+        return super().headerData(section,orientation,role)
+
 class DocumentListView(QTreeView):
     document_activated = Signal(str)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.is_open_document = lambda path: False
-        self._model = QFileSystemModel(self)
+        self._model = DocumentFileSystemModel(self)
         self._model.setFilter(QDir.Filter.Files | QDir.Filter.NoDotAndDotDot)
         self._model.setNameFilters([])
         self._model.setNameFilterDisables(False)
         self._model.setRootPath("")
         self.setColumnWidth(0,240)
         self.setModel(self._model)
-        self.hideColumn(COLUMN_TYPE)
+        self.setColumnWidth(0,260)
+        self.setColumnWidth(1,100)
+        self.setColumnWidth(2,130)
+        self.setColumnWidth(3,170)
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -45,7 +55,7 @@ class DocumentListView(QTreeView):
             else:
                 from PySide6.QtCore import QUrl
                 from PySide6.QtGui import QDesktopServices
-                QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+                __import__("pdfmanager.security.opening",fromlist=["open_document_file"]).open_document_file(self,path)
 
     def retranslate_ui(self) -> None:
         self._model.setHeaderData(0, Qt.Orientation.Horizontal, translator.tr("column.name"))

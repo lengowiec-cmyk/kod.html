@@ -25,10 +25,11 @@ class ScanAutomation:
         pattern=QLineEdit(self.config.get('pattern','{date}_{source}_{counter}'));form.addRow('Reguła nazwy:',pattern)
         form.addRow(QLabel('Pola: {date}, {time}, {source}, {counter}. Duplikaty sprawdzane po zawartości.'))
         ocr=QCheckBox('OCR po imporcie');ocr.setChecked(self.config.get('ocr',False));form.addRow(ocr)
+        routing=QCheckBox('Zastosuj reguły kierowania — utwórz kopie w docelowych szafkach');routing.setChecked(self.config.get('routing',False));form.addRow(routing)
         lang=QComboBox();lang.addItems(['pol','eng','ukr']);lang.setCurrentText(self.config.get('language','pol'));form.addRow('Język OCR:',lang)
         buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel);buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);form.addRow(buttons)
         if not dialog.exec():return
-        config={key:edit.text() for key,edit in fields.items()};config.update(pattern=pattern.text(),ocr=ocr.isChecked(),language=lang.currentText())
+        config={key:edit.text() for key,edit in fields.items()};config.update(pattern=pattern.text(),ocr=ocr.isChecked(),language=lang.currentText(),routing=routing.isChecked())
         try:
             source=Path(config['input']).resolve();target=Path(config['output']).resolve()
             if not source.is_dir() or not target.is_dir():raise ValueError('Wybierz istniejące katalogi.')
@@ -37,6 +38,9 @@ class ScanAutomation:
             if config['ocr']:
                 from pdfmanager.pdf_engine.workflows import ocr_languages
                 if config['language'] not in ocr_languages():raise ValueError('Zainstaluj wybrany model OCR.')
+            if config['routing']:
+                from pdfmanager.dms.automation import Rules
+                if not Rules().all():raise ValueError('Utwórz przynajmniej jedną regułę w zakładce Automatyzacja.')
             self.config=config;self.prefs.put('scan_config',config);self.stable=StableFiles();self.failed_stamps.clear()
         except Exception as exc:QMessageBox.warning(self.window,'Import skanów',str(exc))
     def toggle(self):
@@ -50,11 +54,25 @@ class ScanAutomation:
             paths=[p for p in paths if self.failed_stamps.get(p)!=(p.stat().st_size,p.stat().st_mtime_ns)]
             if not paths:return
             config=dict(self.config)
-            self.worker=Worker(lambda:process_scans(paths,config['output'],pattern=config['pattern'],ocr=config['ocr'],language=config['language']),self.window)
+            self.worker=Worker(lambda:self.process(paths,config),self.window)
             self.worker.succeeded.connect(self.complete)
             self.worker.failed.connect(lambda error:self.window.statusBar().showMessage('Import skanów: '+error,7000))
             self.worker.finished.connect(self.finished);self.worker.start()
         except Exception as exc:self.timer.stop();self.window.statusBar().showMessage('Obserwowanie zatrzymane: '+str(exc),7000)
+    @staticmethod
+    def process(paths,config):
+        results=process_scans(paths,config['output'],pattern=config['pattern'],ocr=config['ocr'],language=config['language'])
+        if config.get('routing'):
+            from pdfmanager.dms.automation import Rules,route_documents
+            updated=[]
+            for source,status,value in results:
+                if status=='ok':
+                    rows=route_documents([Path(value)],Rules().all(),pattern='{source}')
+                    if rows[0][1]=='Błąd':updated.append((source,'error',rows[0][2]));continue
+                    if rows[0][2]:value=Path(rows[0][2])
+                updated.append((source,status,value))
+            results=updated
+        return results
     def complete(self,results):
         errors=[];added=0
         from pdfmanager.logging_setup import get_logger

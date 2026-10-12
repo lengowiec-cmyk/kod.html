@@ -1,0 +1,11 @@
+RAPORT HISTORYCZNY — stan przed aktualizacją 0.6
+
+Sprawdzono bezpieczeństwo PDFManager_0.5_poprawki. Audyt 57 zainstalowanych zależności nie wykazał znanych podatności, ale znaleziono braki w zabezpieczeniach programu.
+
+Najważniejsze ryzyka: silnik PDF nie jest odizolowany od aplikacji, nie wszystkie operacje mają limity pamięci, a lista plików i wyniki wyszukiwania mogą po dwukliku otwierać programy lub skrypty. Lokalne kopie dokumentów i indeks wyszukiwania nie mają własnego szyfrowania.
+
+Nie potwierdzono konkretnego sposobu zdalnego przejęcia komputera. Program nie uruchamia standardowo JavaScriptu z PDF ani automatycznie jego załączników, ale nie daje to gwarancji bezpieczeństwa parsera przed specjalnie przygotowanym plikiem.
+
+Zalecane są: blokowanie niebezpiecznych formatów, wspólne limity przetwarzania, izolacja silnika PDF oraz testy gotowego EXE na Windows. Do tego czasu nie należy traktować programu jako ochrony przed zainfekowanymi dokumentami. Korzystaj z aktualnego Windows Defendera i otwieraj dokumenty ze sprawdzonych źródeł.
+
+Przegląd wykonano 12 października 2026 r. w środowisku Linux. Opisane ryzyka nie zostały jeszcze usunięte.

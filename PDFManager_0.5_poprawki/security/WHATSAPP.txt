@@ -1,0 +1,3 @@
+PDFManager został rozbudowany do wersji 0.6. Dodano oddzielne procesy przetwarzania PDF z limitami pamięci i czasu, blokowanie uruchamiania niebezpiecznych formatów, szyfrowanie lokalnego indeksu, wydatków i nowych kopii dokumentów oraz integrację z Microsoft Defenderem na Windows.
+
+297 testów zakończyło się powodzeniem; jeden znany problem OCR pozostaje oznaczony jako oczekiwane niepowodzenie. Skan 58 zależności runtime nie wykazał znanych podatności. Nie daje to gwarancji odporności na każdy zainfekowany PDF. Procesy nadal mają uprawnienia konta użytkownika, a zabezpieczenia systemowe i gotowy EXE wymagają sprawdzenia na Windows.

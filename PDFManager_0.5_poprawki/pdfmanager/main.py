@@ -29,6 +29,9 @@ def _run_license_gate(license_manager) -> bool:
 
 
 def main() -> int:
+    if len(sys.argv)>2 and sys.argv[1]=='--pdf-worker':
+        from pdfmanager.security.worker import main as worker_main
+        return worker_main(sys.argv[2])
     if len(sys.argv)>1 and sys.argv[1].startswith('--'):
         from pdfmanager.cli import main as cli_main
         option=sys.argv[1][2:]

@@ -13,8 +13,8 @@ class AppSettings:
 
     @property
     def language(self) -> str:
-        # Domyślny język przy pierwszym uruchomieniu: angielski.
-        return self._settings.value("ui/language", "en", type=str)
+        # Domyślny język przy pierwszym uruchomieniu: polski.
+        return self._settings.value("ui/language", "pl", type=str)
 
     @language.setter
     def language(self, value: str) -> None:

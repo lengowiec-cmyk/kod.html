@@ -1,6 +1,8 @@
 """Główne okno aplikacji — Etap 1 (fundament): przeglądanie lokalnych PDF-ów."""
 from __future__ import annotations
 
+from pdfmanager.security.limits import safe_open
+
 import shutil
 import sys
 from dataclasses import dataclass
@@ -141,12 +143,20 @@ class MainWindow(QMainWindow):
         self._viewer_stack.addWidget(self._tabs)  # index 1
 
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
+        from pdfmanager.ui.cabinet_navigation import CabinetNavigation
+        self._cabinet_navigation=CabinetNavigation(self)
+        splitter.addWidget(self._cabinet_navigation)
+        self._cabinet_navigation.root_selected.connect(lambda path:(self._folder_tree.set_cabinet_root(path),self._on_folder_selected(path)))
+        self._cabinet_navigation.folder_selected.connect(self._on_folder_selected)
         splitter.addWidget(self._folder_tree)
         splitter.addWidget(self._document_list)
         splitter.addWidget(self._viewer_stack)
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 2)
-        splitter.setStretchFactor(2, 4)
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 0)
+        splitter.setStretchFactor(2, 1)
+        splitter.setStretchFactor(3, 2)
+        self._cabinet_navigation.setMaximumWidth(270)
+        self._cabinet_navigation.hide()
         self._folder_tree.hide()
         self._document_list.hide()
 
@@ -199,6 +209,10 @@ class MainWindow(QMainWindow):
         self._license_check_timer.setInterval(DAILY_LICENSE_CHECK_MS)
         self._license_check_timer.timeout.connect(self._check_license_and_warn)
         self._license_check_timer.start()
+        from pdfmanager.dms.preferences import Preferences
+        prefs=Preferences();self._search_page.recursive.setChecked(prefs.get('search_recursive',True));self._search_page.fulltext.setChecked(prefs.get('search_fulltext',False))
+        labels=['Start','Skrzynka','Organizuj','Edytor PDF','Edytor obrazu','Szukaj','Wydatki','Automatyzacja']
+        label=prefs.get('startup_tab','Organizuj');self._shell.tabs.setCurrentIndex(labels.index(label) if label in labels else 0)
 
     # ------------------------------------------------------------------ menu
     def _build_menu(self) -> None:
@@ -504,6 +518,13 @@ class MainWindow(QMainWindow):
         for name,label in [('move_content','Przesuń dodany element'),('scale_content','Skaluj dodany element')]:
             item=action(name,label,'transform',lambda checked=False,n=name:self._with_viewer(lambda v:v.set_active_tool(n)))
             self._toolbar.addAction(item);self._menu_tools.addAction(item)
+        from pdfmanager.ui.scan_profiles import ScanProfilesDialog
+        self._scan_profiles=ScanProfilesDialog(self)
+        profiles=action('profiles','Profile skanowania','scan',lambda:self._scan_profiles.exec(),False)
+        separators=action('code_separators','Podział wg kodów','split',self._split_by_codes)
+        codes=action('barcodes','Kody kreskowe','barcode',self._barcode_document)
+        share=action('share_package','Udostępnij paczkę','folder',self._share_package,False)
+        dms_menu.addAction(profiles);dms_menu.addAction(codes);dms_menu.addAction(separators);dms_menu.addAction(share)
         transformations=[]
         for name,label in [('flip_horizontal','Odbij poziomo'),('flip_vertical','Odbij pionowo'),('rotate','Obrót skanu'),('deskew','Prostowanie'),('levels','Poziomy'),('perspective','Perspektywa')]:
             transformations.append(action(name,label,'transform',lambda checked=False,n=name:self._tools.transform(n)))
@@ -572,14 +593,22 @@ class MainWindow(QMainWindow):
         self._search_page=SearchPanel(self)
         self._search_page.open_requested.connect(self._open_search_result)
         self._workspace_stack.addWidget(self._search_page)
+        from pdfmanager.ui.receipts_panel import ReceiptsPanel
+        from pdfmanager.ui.automation_panel import AutomationPanel
+        from pdfmanager.ui.inbox_panel import InboxPanel
+        self._receipts_page=ReceiptsPanel(self);self._workspace_stack.addWidget(self._receipts_page)
+        self._automation_page=AutomationPanel(self);self._workspace_stack.addWidget(self._automation_page)
+        self._inbox_page=InboxPanel(self);self._inbox_page.open_requested.connect(self.open_document);self._workspace_stack.addWidget(self._inbox_page)
         old_menu=self.menuBar()
         self._shell=WorkspaceShell(self,old_menu,[
             ('Start',[self._action_open_file,browser,settings_action,help_action]),
-            ('Skrzynka',[scan_actions['wia'],scans,scan_actions['scan_config'],scan_actions['watch_scans'],scan_actions['twain'],scanner_folder,browser,self._action_open_file,ocr,merge,pages,images,settings_action]),
-            ('Organizuj',[cabinets,favorites,trash,add_cabinet,client,template,scans,merge,batch_split,pages,cabinet_search,settings_action]),
+            ('Skrzynka',[scan_actions['wia'],profiles,scans,scan_actions['scan_config'],scan_actions['watch_scans'],scan_actions['twain'],scanner_folder,browser,self._action_open_file,ocr,merge,pages,images,settings_action]),
+            ('Organizuj',[cabinets,add_cabinet,client,template,favorites,trash,merge,batch_split,codes,separators,cabinet_search,share,settings_action]),
             ('Edytor PDF',[self._action_open_file,save,self._action_save_as_local,print_action,pages,forms,ocr,crop,images,watermark,numbers,sign,properties,settings_action,help_action]),
             ('Edytor obrazu',[open_image,images,*transformations,flatten,ocr,settings_action]),
             ('Szukaj',[self._action_open_file,search,compare,text,settings_action,help_action]),
+            ('Wydatki',[share,settings_action,help_action]),
+            ('Automatyzacja',[profiles,codes,scan_actions['scan_config'],scan_actions['watch_scans'],settings_action]),
         ])
         self.setMenuWidget(self._shell)
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint,True)
@@ -595,7 +624,8 @@ class MainWindow(QMainWindow):
 
     def _show_appearance_settings(self):
         from pdfmanager.ui.appearance_dialog import AppearanceDialog
-        AppearanceDialog(self).exec()
+        from pdfmanager.ui.settings_center import SettingsCenter
+        SettingsCenter(self).exec()
 
     def _prompt_open_media(self):
         from pdfmanager.pdf_engine.workflows import merge_inputs
@@ -616,6 +646,29 @@ class MainWindow(QMainWindow):
         color=QColorDialog.getColor(parent=self)
         if color.isValid():
             self._with_viewer(lambda v:setattr(v,'annotation_color',(color.redF(),color.greenF(),color.blueF())))
+
+    def _share_package(self):
+        from pdfmanager.ui.sharing_dialog import prepare_package
+        prepare_package(self)
+
+    def _split_by_codes(self):
+        viewer=self._current_viewer()
+        if not viewer:return
+        folder=QFileDialog.getExistingDirectory(self,'Folder wynikowy — kod rozpoczyna nową część, strona z kodem zostaje zachowana')
+        if not folder:return
+        from pdfmanager.pdf_engine.utilities import split_by_codes
+        from pdfmanager.ui.background_job import run_job
+        run_job(self,'Podział według kodów',lambda:split_by_codes(viewer.path,Path(folder)),lambda paths:QMessageBox.information(self,'Podział gotowy',f'Utworzono części: {len(paths)}. Wyniki w nowym podfolderze.'))
+
+    def _barcode_document(self):
+        viewer=self._current_viewer()
+        if not viewer:return
+        from pdfmanager.pdf_engine.utilities import barcode_pdf
+        from pdfmanager.ui.background_job import run_job
+        def complete(rows):
+            text='\n'.join(f"Strona {r['page']+1}: {r['format']} — {r['text']}" for r in rows) or 'Nie znaleziono kodów.'
+            box=QMessageBox(self);box.setWindowTitle('Kody kreskowe i QR');box.setText(f'Znaleziono kodów: {len(rows)}');box.setDetailedText(text);box.exec()
+        run_job(self,'Rozpoznawanie kodów',lambda:barcode_pdf(viewer.path),complete)
 
     def _show_shortcuts(self):
         from PySide6.QtWidgets import QTableWidget,QTableWidgetItem
@@ -644,18 +697,25 @@ class MainWindow(QMainWindow):
     def _set_workspace_page(self,index):
         if index==0:
             self._workspace_stack.setCurrentWidget(self._home_page)
+        elif index==1:
+            self._inbox_page.refresh();self._workspace_stack.setCurrentWidget(self._inbox_page)
+        elif index==6:self._receipts_page.refresh();self._workspace_stack.setCurrentWidget(self._receipts_page)
+        elif index==7:self._workspace_stack.setCurrentWidget(self._automation_page)
         elif index==5:
             self._workspace_stack.setCurrentWidget(self._search_page)
             self._search_page.folder.setText(settings.last_folder)
         else:
             self._workspace_stack.setCurrentIndex(0)
             browsing=index in (1,2)
+            self._cabinet_navigation.setVisible(browsing)
             self._folder_tree.setVisible(browsing)
             self._document_list.setVisible(browsing)
-            self._viewer_stack.setVisible(True)
-            if browsing:self._content_splitter.setSizes([245,400,850])
-            else:self._content_splitter.setSizes([0,0,1000])
-        if self._compare_viewer:self._compare_viewer.setVisible(index in (3,4))
+            self._viewer_stack.setVisible(not browsing or __import__('pdfmanager.dms.preferences',fromlist=['Preferences']).Preferences().get('show_preview',True))
+            if browsing:self._content_splitter.setSizes([210,230,390,850])
+            else:self._content_splitter.setSizes([0,0,0,1000])
+        if self._compare_viewer:
+            self._compare_viewer.setVisible(index in (3,4))
+            if index in (3,4):self._content_splitter.setSizes([0,0,0,600,600])
         editing=index in (3,4)
         self._toolbar.setVisible(editing)
         self._annotation_toolbar.setVisible(index==3)
@@ -692,7 +752,7 @@ class MainWindow(QMainWindow):
         shutil.copyfile(other.path,path)
         self._compare_viewer=PdfViewerWidget(str(path),self)
         self._content_splitter.addWidget(self._compare_viewer)
-        self._content_splitter.setSizes([0,0,600,600])
+        self._content_splitter.setSizes([0,0,0,600,600])
 
     def _draw_signature(self):
         from pdfmanager.ui.signature_dialog import SignatureDialog
@@ -719,6 +779,7 @@ class MainWindow(QMainWindow):
 
     def _toggle_browser(self):
         visible = not self._folder_tree.isVisible()
+        self._cabinet_navigation.setVisible(visible)
         self._folder_tree.setVisible(visible)
         self._document_list.setVisible(visible)
 
@@ -797,12 +858,24 @@ class MainWindow(QMainWindow):
         if path:
             self.open_document(path)
 
+    def _open_secure_copy(self,path):
+        if Path(path).suffix.lower()!='.pdm':self.open_document(str(path));return
+        from tempfile import TemporaryDirectory
+        from pdfmanager.security.cache import crypt_file
+        try:
+            with TemporaryDirectory(prefix='pdfmanager-unlock-copy-') as temporary:
+                import re
+                name=re.sub(r'^[0-9a-f]{16}_[0-9a-f]{32}_','',Path(path).name[:-4])
+                output=Path(temporary)/name;crypt_file(path,output,decrypt=True);self.open_document(str(output))
+            if self._current_viewer():self._current_viewer().require_save_as=True
+        except Exception as exc:QMessageBox.warning(self,'Odzyskiwanie kopii',str(exc))
+
     def _open_backup(self):
         from pdfmanager.dms.recovery import data_dir
         folder=data_dir()/'backups';folder.mkdir(parents=True,exist_ok=True)
-        path,_=QFileDialog.getOpenFileName(self,'Kopie zapasowe — zapisz odzyskany dokument przez Zapisz jako',str(folder),'PDF (*.pdf)')
+        path,_=QFileDialog.getOpenFileName(self,'Kopie zapasowe — zapisz odzyskany dokument przez Zapisz jako',str(folder),'Kopie (*.pdm *.pdf)')
         if path:
-            self.open_document(path)
+            self._open_secure_copy(Path(path))
             if self._current_viewer():self._current_viewer().require_save_as=True
 
     def _recent_documents(self):
@@ -834,7 +907,7 @@ class MainWindow(QMainWindow):
         labels=[f'{Path(source).name} — {updated} — {path.parent.name[:8]}' for path,source,updated in entries]
         label,ok=QInputDialog.getItem(self,'Odzyskiwanie','Wybierz kopię; zapisz wynik przez Zapisz jako:',labels,0,False)
         if ok:
-            self.open_document(str(entries[labels.index(label)][0]))
+            self._open_secure_copy(entries[labels.index(label)][0])
             self._current_viewer().require_save_as=True
 
     def _save_as_local(self) -> None:
@@ -888,6 +961,14 @@ class MainWindow(QMainWindow):
             self._set_workspace_page(2)
         self._folder_tree.show()
         self._document_list.show()
+        self._cabinet_navigation.refresh()
+        if self._cabinet_tools.active:
+            root=Path(self._cabinet_tools.active['root']);self._cabinet_navigation.set_root(root)
+            selected=Path(path)
+            if selected.is_relative_to(root) and selected!=root:selected=root/selected.relative_to(root).parts[0]
+            for row in range(self._cabinet_navigation.drawers.count()):
+                item=self._cabinet_navigation.drawers.item(row)
+                if item.data(Qt.UserRole)==str(selected):self._cabinet_navigation.drawers.setCurrentItem(item);break
         self._document_list.show_folder(path)
         self._folder_tree.set_current_folder(path)
         self._search_page.folder.setText(path)
@@ -938,8 +1019,12 @@ class MainWindow(QMainWindow):
         import pymupdf
         protected=False
         try:
-            with pymupdf.open(path) as probe:
-                protected=probe.needs_pass
+            from pdfmanager.security.isolation import call
+            from pdfmanager.ui.background_job import run_job
+            probe={}
+            run_job(self,'Sprawdzanie i otwieranie dokumentu',lambda:call('document.info',Path(path)),lambda value:probe.update(value=value))
+            if not probe:return
+            protected=probe['value']['protected']
             if protected:
                 password,ok=QInputDialog.getText(self,'Hasło PDF','Hasło dokumentu:',QLineEdit.EchoMode.Password)
                 if not ok:return
@@ -962,7 +1047,8 @@ class MainWindow(QMainWindow):
         viewer.require_save_as=protected
         viewer.load_failed.connect(self._on_load_failed)
         if not viewer.is_loaded:
-            return
+            self._on_load_failed(path,viewer.load_error or 'Nie można wyświetlić dokumentu.')
+            viewer.close();viewer.deleteLater();return
         viewer.state_changed.connect(self._update_status_bar)
         viewer.ocr_region_requested.connect(lambda rect,v=viewer:self._tools.ocr(True,rect))
         viewer.undo_redo_changed.connect(self._update_undo_redo_actions)
@@ -978,6 +1064,8 @@ class MainWindow(QMainWindow):
             viewer.go_to_page(min(state.get('page',0),viewer.page_count-1))
             viewer.set_view_mode(state.get('mode','single'))
         viewer.state_changed.connect(lambda v=viewer:prefs.view(v.source_path,{'zoom':v.zoom_percent,'page':v.current_page,'mode':v.view_mode}))
+        if not state:
+            viewer.set_zoom(prefs.get('default_zoom',100));viewer.set_view_mode(prefs.get('default_view','single'))
         viewer.set_active_tool(self._active_tool)
         viewer.stamp_image_path = self._stamp_image_path
         index = self._tabs.addTab(viewer, Path(path).name)

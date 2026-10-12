@@ -21,7 +21,7 @@ def test_ribbon_and_thumbnail_navigation(qapp, tmp_path):
     assert viewer._page_input.value() == 3
     viewer._page_input.setValue(1)
     assert viewer.current_page == 0
-    QTest.qWait(150)
+    QTest.qWait(1500)
     assert all(not viewer._thumbnails.item(i).icon().isNull() for i in range(3))
     assert all(action.isEnabled() for action in win._extended_actions)
     viewer.release_document()

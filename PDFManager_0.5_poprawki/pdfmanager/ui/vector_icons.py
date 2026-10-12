@@ -10,7 +10,17 @@ def vector_icon(name: str, size: int = 32) -> QIcon:
     def line(x,y,a,b):p.drawLine(QPointF(x,y),QPointF(a,b))
     def rect(x,y,w,h):p.drawRect(QRectF(x,y,w,h))
     if name=='brand':
-        p.setPen(QPen(QColor('#e9f4ff'),1.2));p.setBrush(QColor('#508fcb'));p.drawEllipse(QRectF(1,1,30,30));p.setPen(QColor('white'));p.drawText(QRectF(0,0,32,32),Qt.AlignmentFlag.AlignCenter,'P')
+        p.setPen(Qt.NoPen);p.setBrush(QColor('#43b6c9'));p.drawRoundedRect(QRectF(1,1,30,30),7,7);p.setPen(QColor('white'));p.drawText(QRectF(0,0,32,32),Qt.AlignmentFlag.AlignCenter,'P')
+    elif name in ('cabinet','receipt','barcode','automate'):
+        p.setPen(QPen(QColor('#1e607c'),1.5));p.setBrush(QColor('#e3f2f7'));rect(5,3,22,26)
+        if name=='cabinet':
+            rect(8,7,16,7);rect(8,18,16,7);line(13,10,19,10);line(13,21,19,21)
+        elif name=='barcode':
+            for x in (8,10,13,17,20,24):line(x,7,x,25)
+        elif name=='receipt':
+            for y in (9,14,19):line(9,y,23,y)
+        else:
+            p.drawEllipse(QRectF(10,10,12,12));line(8,8,24,24)
     elif name in ('previous','next','first','last'):
         right=name in ('next','last');x=20 if right else 12
         line(x-6 if right else x+6,6,x,16);line(x,16,x-6 if right else x+6,26)

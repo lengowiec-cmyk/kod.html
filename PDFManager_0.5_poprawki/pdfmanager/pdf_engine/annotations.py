@@ -7,6 +7,8 @@ na Windows, gdzie nadpisanie pliku z otwartym uchwytem kończy się błędem).
 """
 from __future__ import annotations
 
+from pdfmanager.security.limits import safe_open
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -148,6 +150,10 @@ def add_image_stamp(path: Path, page_index: int, rect: RectTuple, image_path: Pa
     """Wstawia obraz (np. skan podpisu) jako znaczek w podanym prostokącie."""
     image_path = Path(image_path)
 
+    from pdfmanager.security.limits import check_file,check_pixels
+    from PIL import Image
+    check_file(image_path)
+    with Image.open(image_path) as image:check_pixels(image.width,image.height)
     def mutate(doc: pymupdf.Document) -> AnnotationInfo:
         page = doc[page_index]
         target = _as_rect(rect)
@@ -159,7 +165,7 @@ def add_image_stamp(path: Path, page_index: int, rect: RectTuple, image_path: Pa
 
 def list_annotations(path: Path, page_index: int) -> list[AnnotationInfo]:
     path = Path(path)
-    doc = pymupdf.open(str(path))
+    doc = safe_open(str(path))
     try:
         page = doc[page_index]
         result = []
@@ -213,3 +219,7 @@ def update_note(path: Path, page_index: int, xref: int, content: str) -> None:
         if annot is None:raise ValueError('Nie znaleziono notatki.')
         annot.set_info(content=content);annot.update()
     mutate_pdf_file(path,mutate)
+
+from pdfmanager.security.isolation import enable_module_isolation
+ISOLATED_FUNCTIONS=['add_highlight', 'add_underline', 'add_strikeout', 'add_sticky_note', 'add_free_text', 'add_rectangle', 'add_circle', 'add_line', 'add_image_stamp', 'list_annotations', 'delete_annotation', 'add_arrow', 'add_polygon', 'update_note']
+enable_module_isolation(__name__,globals(),ISOLATED_FUNCTIONS)

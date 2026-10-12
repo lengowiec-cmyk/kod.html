@@ -1,3 +1,4 @@
+from PyInstaller.utils.hooks import collect_submodules
 # -*- mode: python ; coding: utf-8 -*-
 """Specyfikacja PyInstaller dla Menedżera PDF.
 
@@ -27,7 +28,7 @@ a = Analysis(
     [str(PROJECT_ROOT / "pdfmanager" / "main.py")],
     pathex=[str(PROJECT_ROOT)],
     binaries=[],
-    datas=[
+    datas=[(str(PROJECT_ROOT / 'third_party' / 'ZXing_CPP_LICENSE.txt'), 'third_party'),
         # Klucz PUBLICZNY do weryfikacji kluczy aktywacyjnych (patrz
         # pdfmanager/licensing/license_key.py) — bezpieczny do dystrybucji;
         # klucz PRYWATNY (tools/private_key_DO_NOT_SHIP.pem) NIE jest tu
@@ -44,7 +45,7 @@ a = Analysis(
         "keyring.backends.kwallet",
         "pyhanko.sign.validation",
         "pyhanko.sign.signers",
-    ],
+    ]+collect_submodules('pdfmanager.pdf_engine')+collect_submodules('pdfmanager.security')+['zxingcpp'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

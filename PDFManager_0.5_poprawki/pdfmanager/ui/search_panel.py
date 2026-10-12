@@ -1,7 +1,7 @@
 """Folder PDF content search with results and explicit per-file failures."""
 from pathlib import Path
 from PySide6.QtCore import Signal, Qt
-from PySide6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QFormLayout,QLineEdit,QPushButton,QTreeWidget,QTreeWidgetItem,QLabel,QSplitter,QFileDialog,QCheckBox)
+from PySide6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QFormLayout,QLineEdit,QPushButton,QTreeWidget,QTreeWidgetItem,QLabel,QSplitter,QFileDialog,QCheckBox,QDateEdit,QComboBox)
 from pdfmanager.pdf_engine.extended_ops import search_text
 from .background_job import run_job
 
@@ -19,6 +19,11 @@ class SearchPanel(QWidget):
         self.fulltext=QCheckBox('Szukaj także w treści PDF');form.addRow(self.fulltext)
         self.recursive=QCheckBox('Uwzględnij podfoldery');form.addRow(self.recursive)
         clear=QPushButton('Wyczyść indeks PDF');clear.clicked.connect(self.clear_index);form.addRow(clear)
+        self.types=QComboBox();self.types.addItems(['Wszystkie pliki','PDF','Obrazy','Dokumenty biurowe']);form.addRow('Typ pliku:',self.types)
+        self.dates=QCheckBox('Filtruj datę modyfikacji');form.addRow(self.dates)
+        self.from_date=QDateEdit();self.to_date=QDateEdit();self.from_date.setCalendarPopup(True);self.to_date.setCalendarPopup(True)
+        from PySide6.QtCore import QDate
+        self.from_date.setDate(QDate.currentDate().addMonths(-12));self.to_date.setDate(QDate.currentDate());form.addRow('Od:',self.from_date);form.addRow('Do:',self.to_date)
         self.button=QPushButton('Szukaj');self.button.clicked.connect(self.search);form.addRow(self.button)
         self.status=QLabel();self.status.setWordWrap(True);form.addRow(self.status)
         self.results=QTreeWidget();self.results.setHeaderLabels(['Nazwa','Lokalizacja','Strona','Trafienia'])
@@ -30,9 +35,11 @@ class SearchPanel(QWidget):
     def search(self):
         folder=Path(self.folder.text());query=self.query.text().strip();recursive=self.recursive.isChecked();fulltext=self.fulltext.isChecked()
         if not folder.is_dir() or not query:self.status.setText('Wybierz folder i wpisz tekst.');return
+        extensions=[None,{'.pdf'},{'.png','.jpg','.jpeg','.tif','.tiff','.bmp','.webp'},{'.docx','.xlsx','.pptx','.odt','.ods','.rtf','.txt','.csv'}][self.types.currentIndex()]
+        after=self.from_date.date().toPython() if self.dates.isChecked() else None;before=self.to_date.date().toPython() if self.dates.isChecked() else None
         def work():
             from pdfmanager.dms.search import search_files
-            return search_files(folder,query,recursive=recursive,fulltext=fulltext)
+            return search_files(folder,query,recursive=recursive,fulltext=fulltext,extensions=extensions,modified_after=after,modified_before=before)
         def complete(data):
             results,errors=data;self.results.clear()
             for path,page,count in results:
@@ -46,7 +53,7 @@ class SearchPanel(QWidget):
         else:
             from PySide6.QtCore import QUrl
             from PySide6.QtGui import QDesktopServices
-            QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+            __import__("pdfmanager.security.opening",fromlist=["open_document_file"]).open_document_file(self,path)
 
     def clear_index(self):
         from pdfmanager.dms.search import clear_index

@@ -14,6 +14,8 @@ był zablokowany na Windows.
 """
 from __future__ import annotations
 
+from pdfmanager.security.limits import safe_open
+
 from pathlib import Path
 
 import pymupdf
@@ -98,10 +100,11 @@ class PageManagerDialog(QDialog):
     # --------------------------------------------------------------- miniatury
     def _reload(self) -> None:
         self._list.clear()
-        doc = pymupdf.open(str(self.path))
+        from pdfmanager.pdf_engine.render import PdfDocument
+        doc = PdfDocument(self.path)
         try:
             for index in range(doc.page_count):
-                image = render_page_to_qimage(doc[index], zoom=THUMBNAIL_ZOOM)
+                image = doc.render_page(index,zoom=THUMBNAIL_ZOOM)
                 pixmap = QPixmap.fromImage(image)
                 item = QListWidgetItem(QIcon(pixmap), translator.tr("pages.page_label", number=index + 1))
                 item.setData(PAGE_INDEX_ROLE, index)

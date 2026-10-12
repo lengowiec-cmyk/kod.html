@@ -54,7 +54,11 @@ def insert_content(parent,viewer,clipboard=False):
         def pick():
             nonlocal image_data
             name,_=QFileDialog.getOpenFileName(parent,'Obraz','','Obrazy (*.png *.jpg *.jpeg *.tif *.tiff *.bmp)')
-            if name:image_data=Path(name).read_bytes();dialog.text.setPlainText('[Obraz: '+Path(name).name+']');dialog.text.setReadOnly(True)
+            if name:
+                from pdfmanager.security.limits import check_file
+                check_file(name)
+                if Path(name).stat().st_size>32*1024*1024:QMessageBox.warning(dialog,'Obraz','Obraz przekracza limit 32 MB.');return
+                image_data=Path(name).read_bytes();dialog.text.setPlainText('[Obraz: '+Path(name).name+']');dialog.text.setReadOnly(True)
         button.clicked.connect(pick)
     if not dialog.exec():return
     text,style=dialog.result_style();x,y,w,h=[v.value() for v in values]

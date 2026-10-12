@@ -286,7 +286,7 @@ def apply_theme(app: QApplication, theme: str) -> None:
     customization = '#WorkspaceTitleBar { background: '+title+'; }'
     if theme == THEME_LIGHT:
         customization += '#WorkspaceShell QStackedWidget { background: '+toolbar+'; }'
-    app.setStyleSheet(_BASE_STYLESHEET.format(**colors) + (_CLASSIC_LIGHT + _WORKSPACE_LIGHT if theme == THEME_LIGHT else _WORKSPACE_DARK) + customization)
+    app.setStyleSheet(_BASE_STYLESHEET.format(**colors) + (_CLASSIC_LIGHT + _WORKSPACE_LIGHT if theme == THEME_LIGHT else _WORKSPACE_DARK) + (_PRODUCT_STYLE if theme == THEME_LIGHT else '') + customization + ('\nQWidget {font-size:11pt;}' if __import__('pdfmanager.dms.preferences',fromlist=['Preferences']).Preferences().get('large_font',False) else ''))
 
 _CLASSIC_LIGHT = """
 QWidget { font-size: 9pt; }
@@ -343,4 +343,29 @@ _WORKSPACE_DARK = _WORKSPACE_LAYOUT + """
 #WorkspaceShell { background: #282c34; }
 #WorkspaceTabs::tab, #WorkspaceTabs::tab:selected { background: #282c34; color: #eeeeee; }
 #WorkspaceShell QStackedWidget { background: #20232a; border: 1px solid #444; }
+"""
+
+_PRODUCT_STYLE = """
+#WorkspaceTitleBar { background:#234c70; color:white; }
+#WorkspaceTitleBar QLabel { color:white; font-size:11pt; font-weight:600; }
+#WorkspaceTitleBar QToolButton { border:0; border-radius:0; color:white; background:transparent; }
+#WorkspaceTitleBar QToolButton:hover { background:rgba(255,255,255,25); }
+#WorkspaceTabs { background:#eaf1f6; }
+#WorkspaceTabs::tab { padding:9px 17px; margin:0; border:0; color:#29465f; background:transparent; }
+#WorkspaceTabs::tab:selected { background:white; color:#144d6a; border-top:3px solid #1c9bb0; font-weight:600; }
+#RibbonPanel { background:#ffffff; }
+#RibbonGroup QToolButton { border:1px solid transparent; border-radius:6px; padding:3px; color:#29465f; background:transparent; }
+#RibbonGroup QToolButton:hover { background:#eaf6f9; border:1px solid #a7d8e2; }
+#RibbonDivider {color:#d7e4ec; border:0; background:#d7e4ec; max-width:1px; }
+#RibbonCaption { color:#708494; font-size:8pt; padding:2px; }
+#CabinetNavigation { background:#f0f5f9; border-right:1px solid #d7e2eb; }
+#PanelEyebrow { color:#607b90; font-size:8pt; font-weight:700; padding:5px 0; }
+#DrawersList { border:none; background:transparent; }
+#DrawersList::item { padding:9px 8px; border-bottom:1px solid #e2eaf0; }
+#DrawersList::item:selected { background:#d8edf5; color:#174f70; border-left:3px solid #1a91aa; }
+#PageTitle { font-size:19pt; font-weight:600; color:#234c70; padding:8px 0; }
+#MutedLabel { color:#74889a; font-size:9pt; padding:5px; }
+QHeaderView::section { background:#edf3f7; color:#36566e; padding:8px; border:0; border-bottom:1px solid #d6e1e9; font-weight:600; }
+QDialog QGroupBox { border:1px solid #d5e2ec; border-radius:7px; margin-top:15px; padding:14px; }
+QDialog QGroupBox::title { color:#235b7c; padding:0 6px; }
 """

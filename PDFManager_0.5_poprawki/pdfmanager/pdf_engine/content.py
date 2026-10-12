@@ -1,3 +1,5 @@
+
+from pdfmanager.security.limits import safe_open
 """Positioned text/image insertion with transactional saves and overflow validation."""
 import pymupdf
 from uuid import uuid4
@@ -13,6 +15,10 @@ def insert_content_at(path,page_index,rect,*,text='',style=None,image=None,font_
         box=box*page.derotation_matrix
         previous=set(page.get_contents())
         if image:
+            import io
+            from PIL import Image
+            from pdfmanager.security.limits import check_pixels
+            with Image.open(io.BytesIO(image)) as source_image:check_pixels(source_image.width,source_image.height)
             page.insert_image(box,stream=image,keep_proportion=True)
         else:
             if not text.strip():raise ValueError('Wpisz tekst lub wybierz obraz.')
@@ -35,7 +41,7 @@ def insert_content_at(path,page_index,rect,*,text='',style=None,image=None,font_
 
 def inserted_objects(path,page_index):
     import json
-    with pymupdf.open(path) as doc:
+    with safe_open(path) as doc:
         page=doc[page_index];objects={}
         for xref in page.get_contents():
             kind,value=doc.xref_get_key(xref,'PDFManagerObject')
@@ -65,3 +71,7 @@ def transform_inserted(path,page_index,object_id,rect):
             data['rect']=list(target);doc.xref_set_key(xref,'PDFManagerObject',pymupdf.get_pdf_str(json.dumps(data)));found=True
         if not found:raise ValueError('Nie znaleziono elementu dodanego przez PDFManager.')
     return mutate_pdf_file(path,mutate)
+
+from pdfmanager.security.isolation import enable_module_isolation
+ISOLATED_FUNCTIONS=['insert_content_at', 'inserted_objects', 'transform_inserted']
+enable_module_isolation(__name__,globals(),ISOLATED_FUNCTIONS)
