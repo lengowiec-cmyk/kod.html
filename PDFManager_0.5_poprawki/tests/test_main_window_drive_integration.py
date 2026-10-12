@@ -57,48 +57,26 @@ def test_connect_drive_downloads_and_opens_document(qapp, tmp_path):
     win.close()
 
 
-def test_save_to_drive_uploads_new_revision(qapp, tmp_path):
-    win = MainWindow()
-    local_path = tmp_path / "cached.pdf"
-    _make_local_pdf(local_path)
-    win.open_document(str(local_path))
-
-    viewer = win._current_viewer()
-    fake_client = MagicMock(spec=DriveApiClient)
-    updated = _drive_file(modified_time="2026-01-02T00:00:00Z")
-    fake_client.upload_new_revision.return_value = updated
-
+def test_save_to_drive_queues_encrypted_snapshot(qapp, tmp_path):
+    from pdfmanager.drive.teamwork import Outbox
+    from pdfmanager.dms.preferences import Preferences
     from pdfmanager.ui.main_window import DriveTabInfo
-    viewer.drive_info = DriveTabInfo(file_id="file123", baseline=_drive_file(), client=fake_client)
-
-    with patch("pdfmanager.ui.main_window.QMessageBox.information") as mock_info:
-        win._save_to_drive()
-        mock_info.assert_called_once()
-
-    fake_client.upload_new_revision.assert_called_once_with("file123", viewer.path, _drive_file())
-    assert viewer.drive_info.baseline.modified_time == "2026-01-02T00:00:00Z"
-    win.close()
+    win=MainWindow();source=tmp_path/'cached.pdf';_make_local_pdf(source);win.open_document(str(source))
+    client=MagicMock(spec=DriveApiClient);client._team_account_id='account';viewer=win._current_viewer();viewer.drive_info=DriveTabInfo('file123',_drive_file(),client)
+    Preferences().put('transport_employee','Anna');outbox=Outbox(tmp_path/'outbox')
+    with patch('pdfmanager.drive.teamwork.Outbox',return_value=outbox):job=win._save_to_drive()
+    assert job;assert outbox.items()[0]['state']=='Oczekuje na wysłanie';client.upload_new_revision.assert_not_called()
+    restored=tmp_path/'restored.pdf';outbox.recover(job,restored);assert restored.read_bytes()==viewer.path.read_bytes();win.close()
 
 
-def test_save_to_drive_shows_conflict_warning(qapp, tmp_path):
-    win = MainWindow()
-    local_path = tmp_path / "cached.pdf"
-    _make_local_pdf(local_path)
-    win.open_document(str(local_path))
-
-    viewer = win._current_viewer()
-    fake_client = MagicMock(spec=DriveApiClient)
-    remote_now = _drive_file(md5_checksum="changed-on-drive")
-    fake_client.upload_new_revision.side_effect = DriveConflictError("file123", remote_now)
-
+def test_save_to_drive_failure_warns_and_retains_document(qapp,tmp_path):
+    from pdfmanager.dms.preferences import Preferences
     from pdfmanager.ui.main_window import DriveTabInfo
-    viewer.drive_info = DriveTabInfo(file_id="file123", baseline=_drive_file(), client=fake_client)
-
-    with patch("pdfmanager.ui.main_window.QMessageBox.warning") as mock_warning:
-        win._save_to_drive()
-        mock_warning.assert_called_once()
-
-    win.close()
+    win=MainWindow();source=tmp_path/'cached.pdf';_make_local_pdf(source);win.open_document(str(source))
+    client=MagicMock(spec=DriveApiClient);client._team_account_id='account';viewer=win._current_viewer();viewer.drive_info=DriveTabInfo('file123',_drive_file(),client);Preferences().put('transport_employee','Anna')
+    with patch('pdfmanager.drive.teamwork.Outbox.enqueue',side_effect=OSError('disk full')),patch('pdfmanager.ui.main_window.QMessageBox.warning') as warning:
+        assert win._save_to_drive() is False;warning.assert_called_once()
+    assert viewer.path.exists();client.upload_new_revision.assert_not_called();win.close()
 
 
 def test_local_tab_has_no_drive_actions_enabled(qapp, tmp_path):

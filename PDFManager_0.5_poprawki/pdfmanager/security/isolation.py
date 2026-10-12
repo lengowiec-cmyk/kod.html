@@ -2,7 +2,7 @@
 from pathlib import Path
 import base64,dataclasses,functools,importlib,json,os,subprocess,sys,tempfile,time
 WORKER_MODE=False
-ALLOWED_MODULES={'annotations','page_ops','content','extended_ops','workflows','utilities'}
+ALLOWED_MODULES={'annotations','page_ops','content','extended_ops','workflows','utilities','transport_ops'}
 TYPES={'TextSpan':'text_edit','EditResult':'text_edit','AnnotationInfo':'annotations','FormField':'workflows'}
 class ProcessingError(RuntimeError):pass
 

@@ -42,3 +42,19 @@ lista umożliwiają ich wykonanie na komputerze użytkownika; nie zastępują wy
 - Zamknij dokument bez zapisu, odzyskaj zaszyfrowaną kopię i sprawdź kosz oraz migrację starszych kopii.
 - Sprawdź profile skanów, prawdziwy kod QR, podział po kodach i reguły kopiowania do szafek.
 - Sprawdź wszystkie osiem zakładek, ustawienia, wydatki oraz eksport CSV.
+
+## Dodatkowe próby wersji 0.7 dla spedycji
+
+1. Sprawdź podgląd i wstawienie stempla z polskimi znakami, własnym TTF i logo; Cofnij/Ponów.
+2. Utwórz teczkę zlecenia, dołącz CMR/POD/fakturę i ręcznie zaznacz kompletność.
+3. Zbuduj pakiet z okładką, porównaj dwie wersje i sprawdź wszystkie operacje zbiorcze.
+4. Połącz dwa konta z tą samą aplikacją OAuth i wspólnym folderem Drive.
+5. Sprawdź rezerwację, ostrzeżenie dla drugiej osoby i jej wygaśnięcie po 15 minutach.
+6. Otwórz oryginał na dwóch komputerach. Zapisz różne wersje: oryginał musi pozostać bez zmian.
+7. Zmień oryginał poza programem; próba wysłania starego wpisu ma pokazać Konflikt i zachować kopię.
+8. Po potwierdzeniu konta odłącz internet, dodaj wpis do kolejki i uruchom program ponownie. Po połączeniu z właściwym kontem sprawdź wysłanie.
+9. Połącz inne konto: wpis pierwszego konta nie może zostać wysłany.
+10. Pobierz wcześniejszą wersję oraz rewizję oryginału, jeśli Google ją udostępnia.
+11. Sprawdź Ctrl+Alt+N po zapisie, anulowaniu i błędzie; nie wolno przejść dalej po nieudanym zapisie.
+
+Testy automatyczne nie zastępują tych prób na prawdziwych kontach i Windows.

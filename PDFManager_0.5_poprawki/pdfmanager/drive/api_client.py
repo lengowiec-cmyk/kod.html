@@ -71,23 +71,29 @@ class DriveApiClient:
 
     @classmethod
     def from_credentials(cls, credentials) -> "DriveApiClient":
-        return cls(build("drive", "v3", credentials=credentials, cache_discovery=False))
+        import httplib2
+        from google_auth_httplib2 import AuthorizedHttp
+        client=cls(build("drive", "v3", http=AuthorizedHttp(credentials,http=httplib2.Http(timeout=30)), cache_discovery=False))
+        client._credentials=credentials
+        return client
+
+    def for_thread(self):
+        """httplib2 clients must not be shared between network worker threads."""
+        return self.from_credentials(self._credentials) if hasattr(self,'_credentials') else self
 
     def list_folder(self, folder_id: str = "root") -> list[DriveFile]:
+        result=[];token=None
+        safe_id=folder_id.replace("\\","\\\\").replace("'","\\'")
         try:
-            result = (
-                self._service.files()
-                .list(
-                    q=f"'{folder_id}' in parents and trashed = false",
-                    fields=LIST_FIELDS,
-                    orderBy="folder, name",
-                    pageSize=200,
-                )
-                .execute()
-            )
+            for _ in range(50):
+                kwargs=dict(q=f"'{safe_id}' in parents and trashed = false",fields='nextPageToken,'+LIST_FIELDS,orderBy='folder, name',pageSize=200,supportsAllDrives=True,includeItemsFromAllDrives=True)
+                if token:kwargs['pageToken']=token
+                data=self._service.files().list(**kwargs).execute()
+                result.extend(_parse_file(f) for f in data.get('files',[]));token=data.get('nextPageToken')
+                if not token:return result
+            raise DriveApiError('Folder przekracza limit 10 000 wpisów.')
         except HttpError as exc:
             raise DriveApiError(f"Nie udało się pobrać zawartości folderu: {exc}") from exc
-        return [_parse_file(f) for f in result.get("files", [])]
 
     def search(self, query_text: str) -> list[DriveFile]:
         safe_query = query_text.replace("\\", "\\\\").replace("'", "\\'")
@@ -103,22 +109,14 @@ class DriveApiClient:
 
     def get_metadata(self, file_id: str) -> DriveFile:
         try:
-            data = self._service.files().get(fileId=file_id, fields=DRIVE_FIELDS).execute()
+            data = self._service.files().get(fileId=file_id, fields=DRIVE_FIELDS,supportsAllDrives=True).execute()
         except HttpError as exc:
             raise DriveApiError(f"Nie udało się odczytać metadanych pliku: {exc}") from exc
         return _parse_file(data)
 
     def download(self, file_id: str, destination: Path) -> None:
-        destination = Path(destination)
-        request = self._service.files().get_media(fileId=file_id)
-        try:
-            with destination.open("wb") as fh:
-                downloader = MediaIoBaseDownload(fh, request)
-                done = False
-                while not done:
-                    _, done = downloader.next_chunk()
-        except HttpError as exc:
-            raise DriveApiError(f"Nie udało się pobrać pliku z Google Dysku: {exc}") from exc
+        request=self._service.files().get_media(fileId=file_id,supportsAllDrives=True)
+        download_request(request,destination)
 
     def upload_new_revision(self, file_id: str, local_path: Path, baseline: DriveFile) -> DriveFile:
         """Zapisuje zawartość `local_path` jako nową wersję pliku `file_id`.
@@ -151,3 +149,24 @@ class DriveApiClient:
         except HttpError as exc:
             raise DriveApiError(f"Nie udało się zapisać nowego pliku na Google Dysku: {exc}") from exc
         return _parse_file(data)
+
+
+def download_request(request,destination):
+    """Download with a finite size budget; failures never replace a good file."""
+    import os,tempfile
+    from pdfmanager.dms.jobs import checkpoint
+    destination=Path(destination)
+    fd,name=tempfile.mkstemp(prefix='pdfmanager-drive-',suffix='.tmp',dir=destination.parent)
+    temporary=Path(name)
+    try:
+        with os.fdopen(fd,'wb') as stream:
+            downloader=MediaIoBaseDownload(stream,request,chunksize=1024*1024)
+            done=False
+            while not done:
+                checkpoint();_,done=downloader.next_chunk()
+                if stream.tell()>256*1024*1024:raise DriveApiError('Pobierany dokument przekracza limit 256 MB.')
+            stream.flush();os.fsync(stream.fileno())
+        checkpoint();temporary.replace(destination)
+    except HttpError as exc:
+        raise DriveApiError('Nie udało się pobrać dokumentu z Google Drive.') from exc
+    finally:temporary.unlink(missing_ok=True)

@@ -1,3 +1,14 @@
+# PDFManager 0.7 — centrum dokumentów dla spedycji
+
+Aktualna wersja zawiera nowe narzędzia transportowe i bezpieczny zapis wersji Google Drive.
+
+- [Instrukcja wersji 0.7](README_0.7.md)
+- [Przewodnik PDF](docs/PDFManager_0.7_spedycja.pdf)
+- [Zrzuty aplikacji](previews_0.7/)
+- [Wyniki testów](TEST_RESULTS_0.7.txt)
+
+Poniżej pozostaje opis poprzedniego wydania 0.6.
+
 # PDFManager 0.6
 
 Centrum dokumentów: szafki, skrzynka przychodząca, edycja PDF, skanowanie,

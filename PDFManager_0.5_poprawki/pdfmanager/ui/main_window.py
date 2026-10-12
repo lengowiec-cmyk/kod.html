@@ -524,6 +524,13 @@ class MainWindow(QMainWindow):
         separators=action('code_separators','Podział wg kodów','split',self._split_by_codes)
         codes=action('barcodes','Kody kreskowe','barcode',self._barcode_document)
         share=action('share_package','Udostępnij paczkę','folder',self._share_package,False)
+        transport=action('transport_center','Spedycja','cabinet',self._open_transport_center,False)
+        transport.setShortcut('Ctrl+Shift+T');self.addAction(transport)
+        self._transport_actions={'transport_center':transport}
+        for key,label,slot in [('save_next','Zapisz i następny',self._save_and_next),('transport_queue','Dodaj do kolejki',self._save_to_drive),('transport_send','Wyślij kolejkę',self._send_transport_queue)]:
+            item=action(key,label,'save',slot,False);self._transport_actions[key]=item;self._menu_file.addAction(item)
+        self._transport_actions['save_next'].setShortcut('Ctrl+Alt+N');self.addAction(self._transport_actions['save_next'])
+        self._menu_tools.addAction(transport)
         dms_menu.addAction(profiles);dms_menu.addAction(codes);dms_menu.addAction(separators);dms_menu.addAction(share)
         transformations=[]
         for name,label in [('flip_horizontal','Odbij poziomo'),('flip_vertical','Odbij pionowo'),('rotate','Obrót skanu'),('deskew','Prostowanie'),('levels','Poziomy'),('perspective','Perspektywa')]:
@@ -603,8 +610,8 @@ class MainWindow(QMainWindow):
         self._shell=WorkspaceShell(self,old_menu,[
             ('Start',[self._action_open_file,browser,settings_action,help_action]),
             ('Skrzynka',[scan_actions['wia'],profiles,scans,scan_actions['scan_config'],scan_actions['watch_scans'],scan_actions['twain'],scanner_folder,browser,self._action_open_file,ocr,merge,pages,images,settings_action]),
-            ('Organizuj',[cabinets,add_cabinet,client,template,favorites,trash,merge,batch_split,codes,separators,cabinet_search,share,settings_action]),
-            ('Edytor PDF',[self._action_open_file,save,self._action_save_as_local,print_action,pages,forms,ocr,crop,images,watermark,numbers,sign,properties,settings_action,help_action]),
+            ('Organizuj',[transport,cabinets,add_cabinet,client,template,favorites,trash,merge,batch_split,codes,separators,cabinet_search,share,settings_action]),
+            ('Edytor PDF',[transport,self._action_open_file,save,self._action_save_as_local,print_action,pages,forms,ocr,crop,images,watermark,numbers,sign,properties,settings_action,help_action]),
             ('Edytor obrazu',[open_image,images,*transformations,flatten,ocr,settings_action]),
             ('Szukaj',[self._action_open_file,search,compare,text,settings_action,help_action]),
             ('Wydatki',[share,settings_action,help_action]),
@@ -617,6 +624,12 @@ class MainWindow(QMainWindow):
         self._tabs.currentChanged.connect(self._refresh_comparison)
         self._shell.tabs.setCurrentIndex(3)
         self._update_extended_actions()
+        self._refresh_transport_quick()
+        self._transport_leases={}
+        self._transport_timer=QTimer(self);self._transport_timer.setInterval(60000);self._transport_timer.timeout.connect(self._transport_tick);self._transport_timer.start()
+        self._transport_sending=False
+        self._drive_queue_status=QLabel('Google Drive: brak oczekujących zapisów');self.statusBar().addPermanentWidget(self._drive_queue_status)
+        self._refresh_drive_queue_status()
 
     def _activate_extended_tool(self,name):
         self._active_tool=name
@@ -893,11 +906,13 @@ class MainWindow(QMainWindow):
     def _save_working_copy(self):
         viewer=self._current_viewer()
         if not viewer:return
+        if getattr(viewer,'drive_info',None):return self._save_to_drive()
         if not viewer.working_copy or getattr(viewer,'require_save_as',False):return self._save_as_local()
         if QMessageBox.question(self,'Zapisz dokument','Zapisać zmiany w pliku źródłowym? Poprzednia wersja zostanie zachowana w kopii zapasowej.')!=QMessageBox.Yes:return
         try:
             viewer.working_copy.save();self._tabs.setTabText(self._tabs.indexOf(viewer),viewer.source_path.name)
-            self.statusBar().showMessage('Zapisano dokument i kopię zapasową.',4000)
+            self.statusBar().showMessage('Zapisano lokalnie. Synchronizacja folderu Google Drive jest obsługiwana przez aplikację Google.',4000)
+            return True
         except Exception as exc:QMessageBox.warning(self,'Zapis dokumentu',str(exc))
 
     def _recover_documents(self):
@@ -950,12 +965,15 @@ class MainWindow(QMainWindow):
             self._tabs.setTabText(index, target_path.name)
         self._update_drive_actions()
         self.statusBar().showMessage(translator.tr("status.saved_as", path=str(target_path)), 3500)
+        return True
 
     def _update_save_as_action(self, *_: object) -> None:
         viewer = self._current_viewer()
         self._action_save_as_local.setEnabled(viewer is not None and viewer.is_loaded)
 
     def _on_folder_selected(self, path: str) -> None:
+        from pdfmanager.dms.preferences import Preferences
+        if Path(path).is_dir():Preferences().recent(path)
         if hasattr(self,'_shell'):
             self._shell.tabs.setCurrentIndex(2)
             self._set_workspace_page(2)
@@ -1133,7 +1151,9 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted or dialog.selected_file is None:
             return
 
-        drive_file = dialog.selected_file
+        self._open_drive_file(client,dialog.selected_file)
+
+    def _open_drive_file(self,client,drive_file):
         local_path = cache_path_for(drive_file.id, drive_file.name)
         try:
             client.download(drive_file.id, local_path)
@@ -1144,32 +1164,135 @@ class MainWindow(QMainWindow):
 
         self.open_document(str(local_path))
         viewer = self._current_viewer()
-        if viewer is not None:
+        if viewer is not None and viewer.is_loaded and Path(viewer.source_path).resolve()==local_path.resolve():
             viewer.drive_info = DriveTabInfo(file_id=drive_file.id, baseline=drive_file, client=client)
+            try:
+                account=client._service.about().get(fields='user(permissionId)').execute().get('user',{}).get('permissionId','')
+                if isinstance(account,str) and account:client._team_account_id=account
+                from pdfmanager.drive.teamwork import TeamDrive
+                lease=TeamDrive(client).reservation(drive_file.id)
+                if lease:QMessageBox.information(self,'Rezerwacja dokumentu','Dokument edytuje '+lease['owner']+'. Zapis będzie osobną wersją.')
+            except Exception:pass
             self._update_drive_actions()
             self._update_status_bar()
 
-    def _save_to_drive(self) -> None:
-        viewer = self._current_viewer()
-        info: DriveTabInfo | None = getattr(viewer, "drive_info", None) if viewer else None
-        if viewer is None or info is None:
-            return
-
+    def _save_to_drive(self):
+        from pdfmanager.drive.teamwork import Outbox,TeamDrive
+        from pdfmanager.dms.preferences import Preferences
+        viewer=self._current_viewer()
+        info=getattr(viewer,'drive_info',None) if viewer else None
+        if not info:
+            QMessageBox.information(self,'Google Drive','Otwórz dokument przez połączenie Google Drive API.');return False
         try:
-            updated = info.client.upload_new_revision(info.file_id, viewer.path, info.baseline)
-        except DriveConflictError as exc:
-            _logger.warning("Konflikt wersji na Google Dysku dla pliku %s", info.file_id)
-            QMessageBox.warning(
-                self, translator.tr("drive.conflict_title"), translator.tr("drive.conflict_message", name=exc.remote.name)
-            )
-            return
-        except DriveApiError as exc:
-            _logger.exception("Zapis do Google Dysku nie powiodl sie: %s", info.file_id)
-            QMessageBox.critical(self, translator.tr("drive.error_title"), str(exc))
-            return
+            owner=Preferences().get('transport_employee','')
+            if not owner:
+                owner,ok=QInputDialog.getText(self,'Pracownik','Imię / identyfikator do historii zmian:')
+                if not ok or not owner.strip():return False
+                Preferences().put('transport_employee',owner.strip())
+            account=getattr(info.client,'_team_account_id','')
+            if not isinstance(account,str) or not account:
+                data=info.client._service.about().get(fields='user(permissionId)').execute()
+                account=data.get('user',{}).get('permissionId','')
+                if not isinstance(account,str) or not account:raise ValueError('Nie można potwierdzić konta Google. Połącz się z Drive przy dostępnym internecie.')
+                info.client._team_account_id=account
+            job=Outbox().enqueue(viewer.path,info.baseline,owner.strip(),account)
+            self._refresh_drive_queue_status()
+            self.statusBar().showMessage('Oczekuje na wysłanie — zaszyfrowana kopia lokalna zapisana. Spedycja → Google Drive → Wyślij kolejkę.',10000)
+            return job
+        except Exception as exc:
+            QMessageBox.warning(self,'Kolejka Google Drive',str(exc));return False
 
-        viewer.drive_info = DriveTabInfo(file_id=info.file_id, baseline=updated, client=info.client)
-        QMessageBox.information(self, translator.tr("drive.browser_title"), translator.tr("drive.save_success"))
+    def _transport_tick(self):
+        from pdfmanager.dms.preferences import Preferences
+        from pdfmanager.drive.teamwork import Outbox,TeamDrive
+        from pdfmanager.ui.background_job import Worker
+        if getattr(self,'_transport_sending',False) or getattr(self,'_transport_ui_busy',False):return
+        viewer=self._current_viewer();info=getattr(viewer,'drive_info',None) if viewer else None
+        if not info:return
+        account=getattr(info.client,'_team_account_id','')
+        if not isinstance(account,str) or not account:return
+        automatic=Preferences().get('transport_auto_send',True)
+        leases=list(self._transport_leases.items())
+        if not automatic and not leases:return
+        self._transport_sending=True
+        def work():
+            team=TeamDrive(info.client.for_thread())
+            for file_id,(service,owner,token) in leases:
+                try:TeamDrive(service.client.for_thread()).reserve(file_id,owner,token)
+                except Exception:pass # Expired reservation never grants overwrite permission.
+            return Outbox().process(team,account) if automatic else []
+        worker=Worker(work,self);self._transport_worker=worker
+        def complete(results):
+            conflicts=sum(r['state']=='Konflikt' for r in results)
+            sent=sum(r['state']=='Zapisano na Google Drive' for r in results)
+            self._refresh_drive_queue_status()
+            if results:self.statusBar().showMessage(f'Google Drive: wysłano {sent}; konflikty {conflicts}. Szczegóły w centrum spedycji.',12000)
+        worker.succeeded.connect(complete);worker.failed.connect(lambda error:self.statusBar().showMessage('Kolejka Drive: '+error,10000))
+        worker.finished.connect(lambda:setattr(self,'_transport_sending',False));worker.finished.connect(worker.deleteLater);worker.start()
+
+    def _refresh_drive_queue_status(self):
+        if not hasattr(self,'_drive_queue_status'):return
+        from pdfmanager.drive.teamwork import Outbox
+        try:
+            entries=Outbox().items();waiting=sum(e['state']=='Oczekuje na wysłanie' for e in entries);conflicts=sum(e['state']=='Konflikt' for e in entries)
+            self._drive_queue_status.setText(f'Drive: oczekuje {waiting} • konflikty {conflicts}')
+        except Exception:self._drive_queue_status.setText('Drive: błąd odczytu kolejki — sprawdź centrum spedycji')
+
+    def _open_transport_center(self):
+        from pdfmanager.ui.transport_center import TransportCenter
+        if getattr(self,'_transport_sending',False):
+            QMessageBox.information(self,'Google Drive','Trwa wysyłanie w tle. Poczekaj na wynik przed otwarciem centrum.');return
+        self._transport_ui_busy=True
+        try:
+            dialog=TransportCenter(self);dialog.exec();dialog.temp.cleanup()
+        finally:self._transport_ui_busy=False
+
+    def _send_transport_queue(self):
+        from pdfmanager.drive.teamwork import TeamDrive,Outbox
+        from pdfmanager.ui.background_job import run_job
+        viewer=self._current_viewer();info=getattr(viewer,'drive_info',None) if viewer else None
+        if not info:QMessageBox.information(self,'Google Drive','Otwórz dokument przez Google Drive API.');return
+        try:
+            team=TeamDrive(info.client);account=team.service.about().get(fields='user(permissionId)').execute().get('user',{}).get('permissionId','')
+            if not account:raise ValueError('Nie potwierdzono konta Google.')
+            info.client._team_account_id=account
+            def complete(results):
+                self._refresh_drive_queue_status()
+                message='\n'.join(r['baseline']['name']+': '+r['state'] for r in results) or 'Brak oczekujących wpisów dla tego konta.'
+                QMessageBox.information(self,'Stan wysyłania',message)
+            run_job(self,'Wysyłanie wersji do Google Drive',lambda:Outbox().process(team,account),complete)
+        except Exception as exc:QMessageBox.warning(self,'Google Drive',str(exc))
+
+    def _refresh_transport_quick(self):
+        from pdfmanager.dms.preferences import Preferences
+        from PySide6.QtWidgets import QToolBar
+        if not hasattr(self,'_transport_quick'):
+            self._transport_quick=QToolBar('Ulubione narzędzia',self);self.addToolBar(self._transport_quick)
+        self._transport_quick.clear()
+        for key in Preferences().get('transport_quick_actions',['transport_center','save_next']):
+            if key in self._transport_actions:self._transport_quick.addAction(self._transport_actions[key])
+
+    def _save_and_next(self):
+        viewer=self._current_viewer()
+        if not viewer:return
+        source=Path(viewer.source_path)
+        drive_info=getattr(viewer,'drive_info',None)
+        # Advance only after a confirmed local save or durable outbox snapshot.
+        result=self._save_working_copy()
+        if not result:return
+        try:
+            if drive_info:
+                parent=drive_info.baseline.parents[0] if drive_info.baseline.parents else 'root'
+                files=sorted((f for f in drive_info.client.list_folder(parent) if f.mime_type=='application/pdf'),key=lambda f:f.name.casefold())
+                following=[f for f in files if f.name.casefold()>drive_info.baseline.name.casefold()]
+                if following:self._open_drive_file(drive_info.client,following[0])
+                else:self.statusBar().showMessage('Kopia w kolejce. Brak następnego PDF w tym folderze Drive.',6000)
+                return
+            candidates=sorted((p for p in source.parent.glob('*.pdf') if p.resolve()!=source.resolve()),key=lambda p:p.name.casefold())
+            following=[p for p in candidates if p.name.casefold()>source.name.casefold()]
+            if following:self.open_document(str(following[0]))
+            else:self.statusBar().showMessage('Zapis zakończony. Brak następnego PDF w tym folderze.',5000)
+        except (OSError,DriveApiError) as exc:QMessageBox.warning(self,'Następny dokument',str(exc))
 
     def _save_as_new_on_drive(self) -> None:
         viewer = self._current_viewer()
@@ -1447,7 +1570,8 @@ class MainWindow(QMainWindow):
         self._action_open_file.setText(translator_.tr("menu.file.open_file"))
         self._action_save_as_local.setText(translator_.tr("menu.file.save_as"))
         self._action_drive_connect.setText(translator_.tr("menu.file.drive_connect"))
-        self._action_drive_save.setText(translator_.tr("menu.file.drive_save"))
+        self._action_drive_save.setText('Dodaj do kolejki Google Drive')
+        self._action_drive_save.setToolTip('Zapisuje zaszyfrowaną migawkę lokalną; wysyłanie tworzy osobny plik wersji na Drive.')
         self._action_drive_save_as_new.setText(translator_.tr("menu.file.drive_save_as_new"))
         # Wyszarzone dla dokumentów lokalnych — tooltip wyjaśnia dlaczego,
         # żeby nie wyglądało to na usterkę (patrz zgłoszenie użytkownika).
@@ -1504,6 +1628,13 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------- zamknięcie
     def closeEvent(self, event) -> None:
+        if getattr(self,'_transport_sending',False):
+            self._transport_timer.stop();self._transport_worker.control.cancelled.set()
+            event.ignore();self.statusBar().showMessage('Zamykanie po zakończeniu bieżącego wysyłania; kolejka jest zapisana lokalnie.',5000)
+            if not getattr(self,'_transport_close_pending',False):
+                self._transport_close_pending=True;self._transport_worker.finished.connect(self.close)
+            return
+        if hasattr(self,'_transport_timer'):self._transport_timer.stop()
         self._scan_automation.stop()
         if self._compare_viewer:
             self._compare_viewer.release_document()

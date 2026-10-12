@@ -2,7 +2,7 @@ from pathlib import Path, PureWindowsPath
 import json
 from PySide6.QtCore import QSettings
 
-DEFAULT_TEMPLATES={'Klient':['01 Dokumenty','02 Umowy','03 Faktury','04 Korespondencja'],
+DEFAULT_TEMPLATES={'Zlecenie transportowe':['01 Zlecenie','02 CMR','03 POD','04 Faktury','05 Korespondencja'],'Klient':['01 Dokumenty','02 Umowy','03 Faktury','04 Korespondencja'],
                    'Projekt':['01 Administracja','02 Dokumentacja','03 Rozliczenia']}
 
 def validate_relative(value):

@@ -1,11 +1,18 @@
-PDFManager 0.6 — testy Linux, 12.10.2026
+PDFManager 0.7 — weryfikacja 12.10.2026, Linux / Python 3.12
 
-........................................................................ [ 24%]
-........................................................................ [ 48%]
-........................................................................ [ 72%]
-....................................................................x... [ 96%]
-..........                                                               [100%]
-297 passed, 1 xfailed in 131.27s (0:02:11)
+Polecenie: QT_QPA_PLATFORM=offscreen python -m pytest -q
+Modele OCR eng/pol dostępne w /tmp/pdfmanager-cache.
 
-58 zależności runtime: brak znanych podatności w przebiegu pip-audit.
-Windows: sprzęt, Defender, DPAPI, Job Object oraz gotowy instalator wymagają weryfikacji na Windows.
+........................................................................ [ 22%]
+........................................................................ [ 44%]
+........................................................................ [ 66%]
+........................................................................ [ 88%]
+.........................x.............                                  [100%]
+326 passed, 1 xfailed in 142.33s (0:02:22)
+
+Nowe testy spedycji: 29; obejmują Unicode, teczki, pakiety, operacje zbiorcze, redakcję, różnice, kolejkę, konflikty, konto, rezerwację, paginację, zapis/następny i wysyłanie w tle.
+API Google testowane z atrapami, bez rzeczywistych poświadczeń i dokumentów firmy.
+Znany xfail: OCR wielkiej litery Ź w próbce Tesseract przy 150 DPI.
+python -m pip check: brak uszkodzonych zależności.
+Specyfikacje PyInstaller: składnia poprawna; EXE nie zbudowano na Linux.
+Wymagane testy Windows i prawdziwego Google Drive: tools/CHECK_WINDOWS.md.
