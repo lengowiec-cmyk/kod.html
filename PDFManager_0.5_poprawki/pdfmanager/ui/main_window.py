@@ -908,7 +908,10 @@ class MainWindow(QMainWindow):
         except OSError:
             size = 0
         if size <= self._ASYNC_OPEN_THRESHOLD_BYTES:
-            return WorkingCopy(path)
+            try:return WorkingCopy(path)
+            except Exception as exc:
+                self._on_load_failed(path,str(exc))
+                return None
         from pdfmanager.ui.background_job import run_job
         result_box = {}
         run_job(self, 'Otwieranie dokumentu…', lambda: WorkingCopy(path), lambda wc: result_box.update(value=wc))

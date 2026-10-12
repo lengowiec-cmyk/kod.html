@@ -105,3 +105,14 @@ syntetyczny test wydajności nie gwarantuje podobnych czasów dla innych PDF.
 PyMuPDF nadal wymaga rozstrzygnięcia licencji przed dystrybucją zamkniętego
 programu: komercyjna licencja Artifex lub wymiana silnika. Samymi zmianami kodu
 nie można przyznać takiej licencji. Zobacz LICENSING.md i DODATKOWE_LICENCJE.md.
+
+### Uzupełnienie przeglądu kopii zapasowych
+
+Porządkowanie kopii wykonuje się dopiero po pomyślnym zapisie dokumentu.
+Najnowsza utworzona kopia jest chroniona również wtedy, gdy sama przekracza
+limit 2 GiB. Limit rozmiaru jest w takim przypadku miękki. Nazwy zawierające
+nawiasy kwadratowe są traktowane dosłownie. Błąd tworzenia kopii roboczej jest
+zgłaszany użytkownikowi, a niedokończony katalog sesji jest usuwany.
+
+Nowe kopie są grupowane według pełnej ścieżki oryginału, dzięki czemu dokumenty
+o tej samej nazwie z różnych folderów mają odrębne limity liczby kopii.

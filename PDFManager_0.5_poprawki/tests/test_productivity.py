@@ -261,3 +261,60 @@ def test_different_custom_fonts_do_not_reuse_old_font(tmp_path):
         regular=next(s for s in spans if s['text']=='Regular custom')
         bold=next(s for s in spans if s['text']=='Bold custom')
         assert regular['font']!=bold['font'] and 'Bold' in bold['font']
+
+def test_oversized_latest_backup_is_preserved(tmp_path):
+    from pdfmanager.dms.recovery import prune_backups
+    old=tmp_path/'old_doc.pdf';old.write_bytes(b'old')
+    latest=tmp_path/'new_doc.pdf';latest.write_bytes(b'x'*100)
+    prune_backups(tmp_path,'doc.pdf',max_total_bytes=10,protected=latest)
+    assert latest.read_bytes()==b'x'*100 and not old.exists()
+
+def test_backup_names_with_brackets_are_matched_literally(tmp_path):
+    from pdfmanager.dms.recovery import prune_backups
+    a=tmp_path/'a_report[1].pdf';b=tmp_path/'b_report[1].pdf'
+    other=tmp_path/'c_report1.pdf'
+    for p in (a,b,other):p.write_bytes(b'content')
+    prune_backups(tmp_path,'report[1].pdf',max_per_file=1,protected=b)
+    assert not a.exists() and b.exists() and other.exists()
+
+def test_failed_save_does_not_prune_previous_backups(tmp_path,monkeypatch):
+    import pdfmanager.dms.recovery as module
+    source=tmp_path/'source.pdf';pdf(source)
+    copy=WorkingCopy(source,tmp_path/'recovery');pdf(copy.path,'Changed');copy.changed()
+    calls=[];real=module.atomic_copy_file
+    def fail_commit(src,target):
+        if Path(target)==source:raise OSError('Simulated write failure')
+        return real(src,target)
+    monkeypatch.setattr(module,'atomic_copy_file',fail_commit)
+    monkeypatch.setattr(module,'prune_backups',lambda *args,**kwargs:calls.append(args))
+    with pytest.raises(OSError):copy.save()
+    assert calls==[] and copy.dirty
+    assert 'Original' in pymupdf.open(source)[0].get_text()
+    assert list((tmp_path/'backups').glob('*.pdf'))
+
+def test_failed_working_copy_removes_incomplete_session(tmp_path,monkeypatch):
+    import pdfmanager.dms.recovery as module
+    source=tmp_path/'source.pdf';pdf(source);root=tmp_path/'recovery'
+    def fail(*args):raise OSError('Source inaccessible')
+    monkeypatch.setattr(module,'atomic_copy_file',fail)
+    with pytest.raises(OSError):WorkingCopy(source,root)
+    assert list(root.iterdir())==[]
+
+def test_small_working_copy_failure_is_reported(qapp,tmp_path):
+    from unittest.mock import patch
+    from pdfmanager.ui.main_window import MainWindow
+    source=tmp_path/'source.pdf';pdf(source);win=MainWindow()
+    with patch('pdfmanager.dms.recovery.WorkingCopy',side_effect=OSError('Access denied')),patch.object(win,'_on_load_failed') as error:
+        assert win._build_working_copy(str(source)) is None
+        error.assert_called_once_with(str(source),'Access denied')
+    win.close()
+
+def test_backup_retention_separates_same_name_in_different_folders(tmp_path):
+    for client in ('client_a','client_b'):
+        folder=tmp_path/client;folder.mkdir();source=folder/'contract.pdf';pdf(source)
+        copy=WorkingCopy(source,tmp_path/'recovery')
+        for i in range(7):pdf(copy.path,f'{client} edit {i}');copy.changed();copy.save()
+        copy.close()
+    backups=list((tmp_path/'backups').glob('*_contract.pdf'))
+    assert len(backups)==10
+    assert len({p.name.split('_')[0] for p in backups})==2
