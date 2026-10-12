@@ -1,0 +1,16 @@
+........................................................................ [ 26%]
+........................................................................ [ 53%]
+........................................................................ [ 80%]
+........................................x.....                            [100%]
+=============================== warnings summary ===============================
+tests/test_workflows.py::test_signature_with_ephemeral_certificate
+  /workspace/pdfmanager-dev-venv/lib/python3.12/site-packages/pyhanko_certvalidator/registry.py:305: DeprecationWarning: Relying on the operating system's trust list is deprecated and will stop working in a future release; pass 'trust_roots' explicitly
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+269 passed, 1 xfailed, 1 warning in 32.13s
+
+Zaktualizowano po audycie i poprawkach 2026-10-11: +7 testów (retencja kopii
+zapasowych, asynchroniczne otwieranie dużych dokumentów, warstwa UI
+automatycznego importu skanów — dotąd bez testów). Wynik zweryfikowany
+niezależnie w czystym środowisku (nowy venv + apt tesseract-ocr).

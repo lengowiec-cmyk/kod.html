@@ -1,0 +1,10 @@
+Czcionki DejaVu Sans (Regular/Bold/Oblique/BoldOblique) są dołączone jako
+czcionka zastępcza (fallback) używana przy edycji istniejącego tekstu PDF,
+gdy oryginalna czcionka dokumentu nie jest osadzona lub nie zawiera glifów
+wymaganych do zapisania nowego tekstu (np. polskie znaki diakrytyczne lub
+cyrylica ukraińska).
+
+Licencja: Bitstream Vera License + DejaVu changes (domena publiczna/wolna
+licencja), zezwala na redystrybucję i osadzanie w oprogramowaniu, również
+komercyjnym i zamknięto-kodowym, bez opłat licencyjnych. Pełny tekst
+licencji: https://dejavu-fonts.github.io/License.html
