@@ -7,7 +7,7 @@ graficznych o niejasnych prawach.
 """
 from __future__ import annotations
 
-from PySide6.QtCore import QRectF, Qt
+from PySide6.QtCore import QRectF, QRect, Qt
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
 
 _SIZE = 22
@@ -16,7 +16,8 @@ _DANGER = "#D64545"
 
 
 def _blank_pixmap() -> QPixmap:
-    pixmap = QPixmap(_SIZE, _SIZE)
+    pixmap = QPixmap(_SIZE*4, _SIZE*4)
+    pixmap.setDevicePixelRatio(4)
     pixmap.fill(Qt.GlobalColor.transparent)
     return pixmap
 
@@ -35,7 +36,7 @@ def badge_icon(symbol: str, color: str = _ACCENT) -> QIcon:
     font.setPointSizeF(_SIZE * 0.48)
     painter.setFont(font)
     painter.setPen(QColor("white"))
-    painter.drawText(pixmap.rect(), int(Qt.AlignmentFlag.AlignCenter), symbol)
+    painter.drawText(QRect(0,0,_SIZE,_SIZE), int(Qt.AlignmentFlag.AlignCenter), symbol)
     painter.end()
     return QIcon(pixmap)
 

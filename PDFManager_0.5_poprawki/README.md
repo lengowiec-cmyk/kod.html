@@ -1,3 +1,14 @@
+# PDFManager 0.8 — połączenie wbudowane, osobny program „matka”
+
+Menu i układ PDFManagera pozostają. Usunięto dedykację i przycisk aktywacji;
+sterowanie dostępem i podpisanymi aktualizacjami realizuje oddzielny program właściciela.
+
+- [Instrukcja przygotowania wersji 0.8](README_0.8.md)
+- [Wyniki testów](TEST_RESULTS_0.8.txt)
+- [Zrzuty aplikacji i oddzielnego programu](previews_0.8/)
+
+Poniżej pozostają opisy wcześniejszych wydań.
+
 # PDFManager 0.7 — centrum dokumentów dla spedycji
 
 Aktualna wersja zawiera nowe narzędzia transportowe i bezpieczny zapis wersji Google Drive.

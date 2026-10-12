@@ -15,7 +15,8 @@ _BORDER_COLOR = QColor("#B0B0B0")
 
 
 def _new_pixmap() -> QPixmap:
-    pixmap = QPixmap(_WIDTH, _HEIGHT)
+    pixmap = QPixmap(_WIDTH*4, _HEIGHT*4)
+    pixmap.setDevicePixelRatio(4)
     pixmap.fill(Qt.GlobalColor.transparent)
     return pixmap
 

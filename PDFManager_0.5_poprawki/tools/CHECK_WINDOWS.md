@@ -58,3 +58,18 @@ lista umożliwiają ich wykonanie na komputerze użytkownika; nie zastępują wy
 11. Sprawdź Ctrl+Alt+N po zapisie, anulowaniu i błędzie; nie wolno przejść dalej po nieudanym zapisie.
 
 Testy automatyczne nie zastępują tych prób na prawdziwych kontach i Windows.
+
+## Wersja 0.8 — właściciel i aktualizacje
+
+1. Zbuduj osobno PDFManagerAdmin oraz GUI/CLI/Updater z tą samą publiczną konfiguracją.
+2. Sprawdź menu: bez dedykacji i przycisku aktywacji; bez panelu administratora; osiem zakładek pozostaje.
+3. Na dwóch komputerach przez HTTPS/VPN potwierdź automatyczne zgłoszenie instalacji.
+4. W trakcie edycji wyślij blokadę: okno kodu ma zablokować również skróty. Oryginał ma pozostać bez zmian.
+5. Zakończ program z blokady i sprawdź odzyskanie kopii po nowym kodzie.
+6. Wystaw nowy kod, sprawdź okres, inną instalację i ponowne użycie tego samego kodu.
+7. Odłącz internet: odebrana blokada ma pozostać; nowa wymaga ponownego połączenia.
+8. Opublikuj podpisany instalator nowszej wersji: pobranie w tle, instalacja dopiero po zwykłym wyjściu i ponowny start.
+9. Sprawdź błąd instalatora, brak miejsca, uszkodzony plik i wynik update-result.json.
+10. Sprawdź skalowanie 100/125/150/200/250% i przenoszenie między monitorami, zachowując ostrość menu i ikon.
+
+Nie wykonano tych prób EXE na Windows w środowisku Linux.

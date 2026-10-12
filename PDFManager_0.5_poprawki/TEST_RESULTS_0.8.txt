@@ -1,0 +1,22 @@
+PDFManager 0.8 — weryfikacja 12.10.2026, Linux / Python 3.12
+
+Polecenie: QT_QPA_PLATFORM=offscreen python -m pytest -q -o faulthandler_timeout=40
+Modele OCR eng/pol dostępne w /tmp/pdfmanager-cache.
+
+........................................................................ [ 20%]
+........................................................................ [ 40%]
+........................................................................ [ 61%]
+........................................................................ [ 81%]
+..................................................x.............         [100%]
+351 passed, 1 xfailed in 145.35s (0:02:25)
+
+25 nowych testów remote_08: podpisy Ed25519, odbiorca, czas, replay, blokady, kody, TLS, SHA-256, instalator, menu i HiDPI.
+Rzeczywisty lokalny serwer HTTPS: automatyczne zgłoszenie i podpisana blokada; odrzucenie niezgodnej nazwy certyfikatu.
+Instalator EXE: wykonanie zastąpione atrapą; nie uruchamiano nieznanych instalatorów.
+Timer zamkniętego okna nie wywołuje kolejnego okna licencji.
+Obsługa współbieżnego stanu: jeden identyfikator i zachowanie najwyższego numeru polecenia.
+Ikony: rzeczywiste piksele dla 250% DPI; zrzuty GUI wygenerowano przy QT_SCALE_FACTOR=2.
+Znany xfail: OCR wielkiej litery Ź w próbce Tesseract przy 150 DPI.
+python -m pip check: brak uszkodzonych zależności; nowe zależności nie były dodawane.
+Specyfikacje PyInstaller: poprawna składnia; GUI/Admin/Updater/instalator EXE wymagają budowania i prób na Windows.
+Konfiguracja produkcyjnego serwera i prywatne klucze właściciela nie są częścią paczki.

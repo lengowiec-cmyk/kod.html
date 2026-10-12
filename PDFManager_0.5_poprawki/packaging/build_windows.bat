@@ -32,6 +32,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM Osobny aktualizator — klient nie jest programem administratora.
+pyinstaller packaging\pdfmanager_updater.spec --noconfirm
+if errorlevel 1 exit /b 1
+copy /y dist\PDFManagerUpdater.exe dist\PDFManager\PDFManagerUpdater.exe >nul
+if errorlevel 1 exit /b 1
+
 REM --- Podpisanie cyfrowe (opcjonalne) ------------------------------------
 REM Gdy masz juz PRAWDZIWY certyfikat Code Signing (nie testowy), uzupelnij
 REM dane nizej i odkomentuj wywolanie signtool. Bez tego plik .exe zostaje

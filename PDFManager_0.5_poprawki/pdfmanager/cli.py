@@ -35,6 +35,8 @@ def main(argv=None) -> int:
     app.setOrganizationName('PDFManager');app.setApplicationName('PDFManager')
     from pdfmanager.security.isolation import call as document_call
     try:
+        from pdfmanager.remote.client import sync_once
+        sync_once()
         from pdfmanager.licensing.license_manager import get_default_license_manager
         if get_default_license_manager().get_status().is_blocked:
             raise ops.WorkflowError('Licencja wymaga aktywacji w interfejsie aplikacji.')

@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
-from pdfmanager.ui.main_window import ABOUT_DEDICATION, MainWindow
+from pdfmanager.ui.main_window import MainWindow
 
 
-def test_about_dialog_contains_bold_dedication(qapp, tmp_path):
+def test_about_dialog_has_no_personal_dedication(qapp, tmp_path):
     win = MainWindow()
     captured = {}
 
@@ -12,5 +12,5 @@ def test_about_dialog_contains_bold_dedication(qapp, tmp_path):
         instance.setText.side_effect = lambda text: captured.setdefault("text", text)
         win._show_about()
 
-    assert f"<b>{ABOUT_DEDICATION}</b>" in captured["text"]
+    assert "Kubusi" not in captured["text"] and "Gromnika" not in captured["text"]
     instance.exec.assert_called_once()

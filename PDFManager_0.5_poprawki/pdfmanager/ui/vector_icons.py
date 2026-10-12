@@ -1,11 +1,10 @@
 """Original vector icons drawn for PDFManager; no FileCenter assets."""
-from PySide6.QtCore import Qt, QRectF, QPointF
-from PySide6.QtGui import QIcon, QPixmap, QPainter, QPen, QColor, QPainterPath
+from PySide6.QtCore import Qt, QRectF, QPointF, QRect, QSize
+from PySide6.QtGui import QIcon, QPixmap, QPainter, QPen, QColor, QPainterPath, QIconEngine
 
 
-def vector_icon(name: str, size: int = 32) -> QIcon:
-    pix = QPixmap(size,size);pix.fill(Qt.GlobalColor.transparent)
-    p=QPainter(pix);p.setRenderHint(QPainter.RenderHint.Antialiasing);p.scale(size/32,size/32)
+def _draw(name,p):
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
     p.setPen(QPen(QColor('#247bbd'),1.25));p.setBrush(Qt.BrushStyle.NoBrush)
     def line(x,y,a,b):p.drawLine(QPointF(x,y),QPointF(a,b))
     def rect(x,y,w,h):p.drawRect(QRectF(x,y,w,h))
@@ -76,4 +75,22 @@ def vector_icon(name: str, size: int = 32) -> QIcon:
         rect(6,2,20,28);line(10,8,21,8);line(10,13,21,13);line(10,18,19,18)
         if name in ('insert','merge'):p.setPen(QPen(QColor('#58a966'),1.5));line(21,19,21,29);line(16,24,28,24)
         if name=='extract':line(17,23,28,23);line(24,19,28,23);line(24,27,28,23)
-    p.end();return QIcon(pix)
+
+
+
+class VectorIconEngine(QIconEngine):
+    """Paint on demand at the actual device ratio: crisp at 125–300% DPI."""
+    def __init__(self,name):super().__init__();self.name=name
+    def clone(self):return VectorIconEngine(self.name)
+    def paint(self,painter,rect,mode,state):
+        painter.save();painter.translate(rect.x(),rect.y());painter.scale(rect.width()/32,rect.height()/32)
+        if mode==QIcon.Mode.Disabled:painter.setOpacity(.4)
+        _draw(self.name,painter);painter.restore()
+    def pixmap(self,size,mode,state):return self.scaledPixmap(size,mode,state,1.0)
+    def scaledPixmap(self,size,mode,state,scale):
+        import math
+        pix=QPixmap(math.ceil(size.width()*scale),math.ceil(size.height()*scale));pix.setDevicePixelRatio(scale);pix.fill(Qt.transparent)
+        painter=QPainter(pix);self.paint(painter,QRect(0,0,size.width(),size.height()),mode,state);painter.end();return pix
+
+def vector_icon(name: str,size: int=32)->QIcon:
+    return QIcon(VectorIconEngine(name))

@@ -22,6 +22,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(SPECPATH).parent  # packaging/ -> korzeń projektu
 ICON_PATH = PROJECT_ROOT / "packaging" / "pdfmanager.ico"
 
+configuration=PROJECT_ROOT/'pdfmanager/resources/management.json'
+management_data=[(str(configuration),'pdfmanager/resources')] if configuration.is_file() else []
+
 block_cipher = None
 
 a = Analysis(
@@ -34,7 +37,7 @@ a = Analysis(
         # klucz PRYWATNY (tools/private_key_DO_NOT_SHIP.pem) NIE jest tu
         # wymieniony i nigdy nie powinien trafić do spakowanej wersji.
         (str(PROJECT_ROOT / "pdfmanager" / "licensing" / "public_key.pem"), "pdfmanager/licensing"),
-    ],
+    ]+management_data,
     hiddenimports=[
         # keyring wybiera backend dynamicznie (pkgutil/entry_points) — na
         # Windows potrzebujemy mieć WinVaultKeyring dostępny w spakowanej

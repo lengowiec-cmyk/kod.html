@@ -7,7 +7,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QToolButton, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QToolButton, QWidget, QApplication
 
 from pdfmanager.i18n.translator import SUPPORTED_LANGUAGES, translator
 from pdfmanager.ui.flag_icons import flag_icon
@@ -20,6 +20,9 @@ LOGO_HEIGHT = 30
 class HeaderBar(QWidget):
     language_selected = Signal(str)
 
+    def _scaled_logo(self,pixmap):
+        ratio=self.devicePixelRatioF();scaled=pixmap.scaledToHeight(round(LOGO_HEIGHT*ratio),Qt.TransformationMode.SmoothTransformation);scaled.setDevicePixelRatio(ratio);return scaled
+
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setObjectName("HeaderBar")
@@ -29,7 +32,7 @@ class HeaderBar(QWidget):
         logo_pixmap = QPixmap(str(LOGO_PATH)) if LOGO_PATH.is_file() else QPixmap()
         if not logo_pixmap.isNull():
             self._logo_label.setPixmap(
-                logo_pixmap.scaledToHeight(LOGO_HEIGHT, Qt.TransformationMode.SmoothTransformation)
+                self._scaled_logo(logo_pixmap)
             )
         else:
             self._logo_label.setVisible(False)

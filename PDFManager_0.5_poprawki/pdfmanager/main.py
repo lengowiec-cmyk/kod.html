@@ -25,6 +25,10 @@ def _run_license_gate(license_manager) -> bool:
     if not status.is_blocked:
         return True
     dialog = ActivationDialog(license_manager, allow_cancel=False, message_key="license.blocked_message")
+    from pdfmanager.licensing.license_manager import LicenseState
+    if status.state==LicenseState.REMOTE_BLOCKED:
+        from pdfmanager.remote.storage import RemoteState
+        dialog._message_label.setText('Dostęp został zablokowany przez administratora. Wpisz nowy kod dostępu.\n'+RemoteState().read().get('reason',''))
     return dialog.exec() == dialog.DialogCode.Accepted
 
 
@@ -36,6 +40,9 @@ def main() -> int:
         from pdfmanager.cli import main as cli_main
         option=sys.argv[1][2:]
         return cli_main(['--help'] if option=='help' else [option,*sys.argv[2:]])
+    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtCore import Qt
+    QGuiApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QApplication(sys.argv)
     app.setOrganizationName("PDFManager")
     app.setApplicationName("PDFManager")
@@ -53,6 +60,8 @@ def main() -> int:
     translator.set_language(settings.language)
     apply_theme(app, settings.theme)
 
+    from pdfmanager.remote.client import sync_once
+    sync_once()
     license_manager = get_default_license_manager()
     if not _run_license_gate(license_manager):
         return 0

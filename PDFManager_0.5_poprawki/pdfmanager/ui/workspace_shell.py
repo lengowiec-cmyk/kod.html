@@ -7,7 +7,7 @@ class TitleBar(QWidget):
     def __init__(self,window):
         super().__init__(window);self.window=window;self.setObjectName('WorkspaceTitleBar');self.setAttribute(Qt.WA_StyledBackground,True);self.setFixedHeight(34)
         row=QHBoxLayout(self);row.setContentsMargins(12,0,0,0)
-        mark=QLabel();mark.setPixmap(vector_icon('brand',23).pixmap(23,23));row.addWidget(mark)
+        mark=QLabel();mark.setPixmap(vector_icon('brand',23).pixmap(QSize(23,23),4.0));row.addWidget(mark)
         self.title=QLabel('PDFManager • Centrum dokumentów');row.addWidget(self.title);row.addStretch()
         for text,tip,callback in [('—','Minimalizuj',window.showMinimized),('□','Maksymalizuj / przywróć',self.toggle_maximize),('×','Zamknij',window.close)]:
             button=QToolButton();button.setText(text);button.setToolTip(tip);button.setFixedSize(46,34);button.clicked.connect(callback);row.addWidget(button)

@@ -52,11 +52,7 @@ from pdfmanager.windows.file_association import (
     register_application,
 )
 
-DAILY_LICENSE_CHECK_MS = 24 * 60 * 60 * 1000
-
-# Osobisty dopisek w oknie "O programie" — zawsze w tej formie, niezależnie
-# od języka interfejsu (tak jak nota o prawach autorskich w pasku nagłówka).
-ABOUT_DEDICATION = "Dla mojego kochanego Kubusia z Gromnika Love"
+DAILY_LICENSE_CHECK_MS = 60 * 1000
 
 APP_ICON_PATH = Path(__file__).resolve().parent.parent / "resources" / "branding" / "icon_mark.png"
 
@@ -594,7 +590,7 @@ class MainWindow(QMainWindow):
         headline=QLabel('PDFManager');headline.setObjectName('HomeHeadline');home.addWidget(headline)
         home.addWidget(QLabel('Dokumenty PDF, OCR i organizacja plików — lokalnie na Twoim komputerze.'))
         home.addWidget(self._header_bar);self._header_bar.show()
-        for label,callback in [('Otwórz dokument',self._prompt_open_file),('Wybierz folder',self._prompt_open_folder),('Aktywacja licencji',self._open_activation_dialog)]:
+        for label,callback in [('Otwórz dokument',self._prompt_open_file),('Wybierz folder',self._prompt_open_folder)]:
             button=QPushButton(label);button.setMaximumWidth(240);button.clicked.connect(callback);home.addWidget(button)
         home.addStretch();self._workspace_stack.addWidget(self._home_page)
         self._search_page=SearchPanel(self)
@@ -630,6 +626,8 @@ class MainWindow(QMainWindow):
         self._transport_sending=False
         self._drive_queue_status=QLabel('Google Drive: brak oczekujących zapisów');self.statusBar().addPermanentWidget(self._drive_queue_status)
         self._refresh_drive_queue_status()
+        from pdfmanager.remote.controller import RemoteController
+        self._remote_controller=RemoteController(self)
 
     def _activate_extended_tool(self,name):
         self._active_tool=name
@@ -1354,12 +1352,40 @@ class MainWindow(QMainWindow):
         """Wywoływane przy starcie i raz na dobę podczas pracy (QTimer)."""
         status = self.license_manager.get_status()
         self._update_license_status_bar()
+        if status.is_blocked:
+            self._enforce_license_block();return
         if not status.is_near_expiry:
             return
+        from datetime import datetime
+        today=datetime.now().date()
+        if getattr(self,'_last_expiry_warning',None)==today:return
+        self._last_expiry_warning=today
         warning = ExpiryWarningDialog(status.days_remaining, self)
         warning.exec()
         if warning.enter_key_requested:
             self._open_activation_dialog()
+
+    def _enforce_license_block(self):
+        if getattr(self,'_license_dialog_active',False):return
+        self._license_dialog_active=True
+        self._scan_automation.stop();self._transport_timer.stop()
+        self._blocked_action_states={a:a.isEnabled() for a in self.findChildren(QAction)}
+        for action in self._blocked_action_states:action.setEnabled(False)
+        self._workspace_stack.setEnabled(False);self._shell.setEnabled(False)
+        for bar in self.findChildren(__import__('PySide6.QtWidgets',fromlist=['QToolBar']).QToolBar):bar.setEnabled(False)
+        dialog=ActivationDialog(self.license_manager,self,allow_cancel=False,message_key='license.blocked_message')
+        from pdfmanager.licensing.license_manager import LicenseState
+        if self.license_manager.get_status().state==LicenseState.REMOTE_BLOCKED:
+            from pdfmanager.remote.storage import RemoteState
+            dialog._message_label.setText('Dostęp został zablokowany przez administratora. Wpisz nowy kod dostępu.\n'+RemoteState().read().get('reason',''))
+        accepted=dialog.exec()==dialog.DialogCode.Accepted
+        self._license_dialog_active=False
+        if accepted and not self.license_manager.get_status().is_blocked:
+            for action,enabled in self._blocked_action_states.items():action.setEnabled(enabled)
+            self._workspace_stack.setEnabled(True);self._shell.setEnabled(True)
+            for bar in self.findChildren(__import__('PySide6.QtWidgets',fromlist=['QToolBar']).QToolBar):bar.setEnabled(True)
+            self._transport_timer.start();self._update_license_status_bar()
+        else:self.close()
 
     # ------------------------------------------------- skojarzenie z PDF (Windows)
     def _set_default_pdf_app(self) -> None:
@@ -1512,7 +1538,7 @@ class MainWindow(QMainWindow):
         box.setIcon(QMessageBox.Icon.Information)
         box.setTextFormat(Qt.TextFormat.RichText)
         body = translator.tr("about.text").replace("\n", "<br>")
-        box.setText(f"{body}<br><br><b>{ABOUT_DEDICATION}</b>")
+        box.setText(body)
         box.exec()
 
     def _show_log_file(self) -> None:
@@ -1628,12 +1654,28 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------- zamknięcie
     def closeEvent(self, event) -> None:
+        if hasattr(self,'_license_check_timer'):self._license_check_timer.stop()
+        from pdfmanager.ui.background_job import Worker
+        workers=[w for w in self.findChildren(Worker) if w.isRunning()]
+        if workers:
+            if hasattr(self,'_license_check_timer'):self._license_check_timer.stop()
+            if hasattr(self,'_transport_timer'):self._transport_timer.stop()
+            if hasattr(self,'_remote_controller'):self._remote_controller.closing=True;self._remote_controller.timer.stop()
+            self._scan_automation.stop();event.ignore()
+            pending=getattr(self,'_pending_close_workers',set())
+            for worker in workers:
+                worker.control.cancelled.set()
+                if id(worker) not in pending:worker.finished.connect(self.close);pending.add(id(worker))
+            self._pending_close_workers=pending
+            self.statusBar().showMessage('Zamykanie po bezpiecznym zakończeniu bieżących operacji; kopie dokumentów zostaną zachowane.',5000)
+            return
         if getattr(self,'_transport_sending',False):
             self._transport_timer.stop();self._transport_worker.control.cancelled.set()
             event.ignore();self.statusBar().showMessage('Zamykanie po zakończeniu bieżącego wysyłania; kolejka jest zapisana lokalnie.',5000)
             if not getattr(self,'_transport_close_pending',False):
                 self._transport_close_pending=True;self._transport_worker.finished.connect(self.close)
             return
+        if hasattr(self,'_remote_controller') and not self._remote_controller.prepare_close(event):return
         if hasattr(self,'_transport_timer'):self._transport_timer.stop()
         self._scan_automation.stop()
         if self._compare_viewer:
@@ -1646,3 +1688,4 @@ class MainWindow(QMainWindow):
             if widget.working_copy:widget.working_copy.close()
         settings.set_window_geometry(self.saveGeometry())
         super().closeEvent(event)
+        if event.isAccepted() and hasattr(self,'_remote_controller'):self._remote_controller.finish_close()

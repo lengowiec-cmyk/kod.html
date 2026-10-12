@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Callable
+import hashlib,re
 
 from PySide6.QtCore import QStandardPaths
 
@@ -36,6 +37,7 @@ class LicenseState(Enum):
     TRIAL = "trial"
     LICENSED = "licensed"
     EXPIRED = "expired"
+    REMOTE_BLOCKED = "remote_blocked"
 
 
 @dataclass(frozen=True)
@@ -46,7 +48,7 @@ class LicenseStatus:
 
     @property
     def is_blocked(self) -> bool:
-        return self.state == LicenseState.EXPIRED
+        return self.state in (LicenseState.EXPIRED,LicenseState.REMOTE_BLOCKED)
 
     @property
     def is_near_expiry(self) -> bool:
@@ -96,15 +98,38 @@ class LicenseManager:
         """Weryfikuje klucz i ustawia nową licencję liczoną od teraz.
         Zgłasza `LicenseKeyError`, jeśli klucz jest nieprawidłowy — stan
         pozostaje wtedy niezmieniony."""
-        payload = verify_license_key(key_string)
-        expires_at = self._now_fn() + timedelta(days=DAYS_PER_MONTH * payload.months)
+        cleaned=re.sub(r'\s+','',key_string).strip()
+        fingerprint=hashlib.sha256(cleaned.encode()).hexdigest() if cleaned.startswith('PDMR1.') else hashlib.sha256(cleaned.upper().replace('-','').encode()).hexdigest()
+        used_file=self._license_file.with_name(self._license_file.name+'.used')
+        records=secure_storage.read_dual(REGISTRY_KEY_PATH,'used_keys',used_file)
+        used=set(value for record in records for value in record.get('fingerprints',[]))
+        if fingerprint in used:raise LicenseKeyError('Ten kod został już wykorzystany na tej instalacji.')
+        from pdfmanager.remote.storage import load_config,RemoteState
+        if not cleaned.startswith('PDMR1.') and load_config() and RemoteState().blocked():raise LicenseKeyError('Zdalna blokada wymaga nowego kodu dla tej instalacji z programu administratora.')
+        if cleaned.startswith('PDMR1.'):
+            from pdfmanager.remote.storage import load_config,RemoteState
+            from pdfmanager.remote.protocol import verify_activation
+            try:
+                config=load_config()
+                if not config:raise ValueError('Instalacja nie ma konfiguracji administratora.')
+                payload=verify_activation(cleaned,config,RemoteState().device(),now=self._now_fn().timestamp());days=payload['days']
+            except Exception as exc:raise LicenseKeyError('Nieprawidłowy, wygasły lub przeznaczony dla innej instalacji kod administratora.') from exc
+        else:days=DAYS_PER_MONTH*verify_license_key(cleaned).months
+        expires_at = self._now_fn() + timedelta(days=days)
         secure_storage.write_dual(
             REGISTRY_KEY_PATH, LICENSE_VALUE_NAME, self._license_file, {"expires_at": expires_at.isoformat()}
         )
+        used.add(fingerprint)
+        secure_storage.write_dual(REGISTRY_KEY_PATH,'used_keys',used_file,{'fingerprints':sorted(used)})
+        from pdfmanager.remote.storage import load_config,RemoteState
+        if load_config():RemoteState().release()
         return self.get_status()
 
     def get_status(self) -> LicenseStatus:
         now = self._now_fn()
+        from pdfmanager.remote.storage import load_config,RemoteState
+        if load_config() and RemoteState().blocked():
+            return LicenseStatus(LicenseState.REMOTE_BLOCKED,0,now)
 
         license_expiry = self._read_active_license_expiry()
         if license_expiry is not None:

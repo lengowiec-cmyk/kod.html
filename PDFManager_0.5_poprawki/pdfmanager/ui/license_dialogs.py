@@ -76,6 +76,9 @@ class ActivationDialog(QDialog):
             super().closeEvent(event)
 
     def _quit_application(self) -> None:
+        if self.parentWidget() is not None:
+            # The main window must finish/cancel workers and preserve working copies.
+            self.reject();return
         app = QApplication.instance()
         if app is not None:
             app.quit()
