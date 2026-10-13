@@ -2378,26 +2378,54 @@ class RicohSoapClient:
 
     def put_user_entry(self, session_id, entry_name, protocol, local_ip,
                         local_hostname, share_name, folder_username, folder_password,
-                        entry_index=1, tag_id=1):
+                        entry_index=1, tag_id=1, use_hostname_for_smb=False):
         """
-        Dodaje wpis użytkownika przez putObjects — POTWIERDZONY przechwyceniem
-        prawdziwego żądania SDMA. Kluczowe: remoteFolder:path dla SMB to pełna
-        ścieżka UNC z NAZWĄ KOMPUTERA (np. "\\\\ARTUR-LAPTOP\\skany"), nie
-        adresem IP — SDMA używało hostname, nie IP, w przechwyconym ruchu.
+        Dodaje wpis użytkownika przez putObjects.
+
+        Dla SMB istnieją DWA tryby adresowania (use_hostname_for_smb),
+        wzajemnie się wykluczające, bo rozwiązują różne problemy:
+
+        use_hostname_for_smb=False (domyślne, ADRES IP w serverName):
+          POTWIERDZONY PROBLEM (log z sieci klienta, adres 10.8.4.5 w innej
+          podsieci): przy pustym serverName i samą nazwą hosta w ścieżce,
+          wpis zapisał się poprawnie (returnValue=OK), ale skany nie
+          docierały do folderu — drukarka nie potrafiła rozwiązać nazwy
+          hosta do adresu IP (typowe w sieciach z segmentacją VLAN, gdzie
+          broadcast/NetBIOS nie przechodzi między podsieciami). Ten tryb
+          działa niezależnie od konfiguracji sieci, ALE przestaje działać,
+          jeśli adres IP komputera zmieni się (DHCP) po konfiguracji.
+
+        use_hostname_for_smb=True (NAZWA HOSTA w ścieżce, puste serverName):
+          Odporne na zmianę adresu IP przez DHCP — drukarka za każdym razem
+          sama rozwiąże aktualny adres po nazwie. Wymaga jednak działającego
+          rozpoznawania nazw (NetBIOS/DNS) w sieci drukarki — w sieciach
+          z segmentacją VLAN lub bez WINS/DNS dla urządzeń lokalnych może
+          nie zadziałać (patrz wyżej).
+
         Hasło folderu to zwykły Base64 (potwierdzone przez działający,
         publiczny moduł RicohAddressBook — nie wymaga dodatkowego szyfrowania
         PES mimo pola PES:Encoding w startSession).
         """
         if protocol == "smb":
-            unc_path = f"\\\\{local_hostname}\\{share_name}"
-            folder_props = (
-                f'<item><propName>remoteFolder:type</propName><propVal>smb</propVal></item>'
-                f'<item><propName>remoteFolder:serverName</propName><propVal></propVal></item>'
-                f'<item><propName>remoteFolder:path</propName><propVal>{self._xml_escape(unc_path)}</propVal></item>'
-                f'<item><propName>remoteFolder:select</propName><propVal>private</propVal></item>'
-                f'<item><propName>remoteFolder:accountName</propName><propVal>{self._xml_escape(folder_username)}</propVal></item>'
-                f'<item><propName>remoteFolder:password</propName><propVal>{base64.b64encode(folder_password.encode("utf-8")).decode("ascii")}</propVal></item>'
-            )
+            if use_hostname_for_smb:
+                unc_path = f"\\\\{local_hostname}\\{share_name}"
+                folder_props = (
+                    f'<item><propName>remoteFolder:type</propName><propVal>smb</propVal></item>'
+                    f'<item><propName>remoteFolder:serverName</propName><propVal></propVal></item>'
+                    f'<item><propName>remoteFolder:path</propName><propVal>{self._xml_escape(unc_path)}</propVal></item>'
+                    f'<item><propName>remoteFolder:select</propName><propVal>private</propVal></item>'
+                    f'<item><propName>remoteFolder:accountName</propName><propVal>{self._xml_escape(folder_username)}</propVal></item>'
+                    f'<item><propName>remoteFolder:password</propName><propVal>{base64.b64encode(folder_password.encode("utf-8")).decode("ascii")}</propVal></item>'
+                )
+            else:
+                folder_props = (
+                    f'<item><propName>remoteFolder:type</propName><propVal>smb</propVal></item>'
+                    f'<item><propName>remoteFolder:serverName</propName><propVal>{self._xml_escape(local_ip)}</propVal></item>'
+                    f'<item><propName>remoteFolder:path</propName><propVal>{self._xml_escape(share_name)}</propVal></item>'
+                    f'<item><propName>remoteFolder:select</propName><propVal>private</propVal></item>'
+                    f'<item><propName>remoteFolder:accountName</propName><propVal>{self._xml_escape(folder_username)}</propVal></item>'
+                    f'<item><propName>remoteFolder:password</propName><propVal>{base64.b64encode(folder_password.encode("utf-8")).decode("ascii")}</propVal></item>'
+                )
         else:
             # Struktura POTWIERDZONA pośrednio przez analizę prawdziwego
             # żądania HTML (adrsSetUser.cgi, folderProtocolIn=FTP_O) z
@@ -2537,7 +2565,7 @@ class RicohSoapClient:
         return False, text, None
 
     def add_scan_user(self, entry_name, protocol, local_ip, local_hostname,
-                       share_name, folder_username, folder_password):
+                       share_name, folder_username, folder_password, use_hostname_for_smb=False):
         """
         Punkt wejścia wysokiego poziomu: startSession -> (odczyt wolnego
         indeksu) -> putObjects -> terminateSession.
@@ -2579,7 +2607,7 @@ class RicohSoapClient:
                 success, _, error_code = self.put_user_entry(
                     session_id, entry_name, protocol, local_ip, local_hostname,
                     share_name, folder_username, folder_password,
-                    entry_index=index
+                    entry_index=index, use_hostname_for_smb=use_hostname_for_smb
                 )
                 if success:
                     return True, False
@@ -2758,7 +2786,7 @@ class RicohWebClient:
             or ">login<" in low
         )
 
-    def _push_mp161_address_entry(self, session, base_url, base_path, local_ip, protocol, verify):
+    def _push_mp161_address_entry(self, session, base_url, base_path, local_ip, protocol, verify, use_hostname_for_smb=False):
         """
         Sekwencja zapisu wpisu w książce adresowej dla Ricoh Aficio MP 161 —
         POTWIERDZONA analizą pliku HAR z przechwyconej sesji przeglądarki
@@ -2784,8 +2812,15 @@ class RicohWebClient:
         protocol_value = "SMB_O" if protocol == "smb" else "FTP_O"
         entry_name = TARGET_USER
         # folderPathNameIn to PEŁNA ścieżka UNC (potwierdzone przez HAR:
-        # "\\SURFACE\sssss"), nie sama nazwa udziału.
-        unc_path = f"\\\\{local_ip}\\{SHARE_NAME}" if protocol == "smb" else ""
+        # "\\SURFACE\sssss"), nie sama nazwa udziału. Dla SMB adresujemy
+        # po IP (przeżywa brak rozpoznawania nazw w sieci) albo po nazwie
+        # hosta (przeżywa zmianę IP przez DHCP) — wybór użytkownika, patrz
+        # use_hostname_for_smb.
+        if protocol == "smb":
+            smb_host = get_local_hostname() if use_hostname_for_smb else local_ip
+            unc_path = f"\\\\{smb_host}\\{SHARE_NAME}"
+        else:
+            unc_path = ""
 
         # Numer wolnego slotu (entryIndexIn) MUSI pochodzić z serwera, nie
         # być zgadywany na sztywno jako "001" — w oryginalnym formularzu
@@ -3111,7 +3146,7 @@ class RicohWebClient:
             except Exception as ex:
                 logger_cb(f"  Błąd odczytu książki adresowej: {ex}")
 
-    def _try_soap_add_user(self, local_ip, protocol):
+    def _try_soap_add_user(self, local_ip, protocol, use_hostname_for_smb=False):
         """
         Próbuje dodać wpis przez oficjalny protokół SOAP (RicohSoapClient).
         Próbuje HTTP i HTTPS, tak jak reszta klienta.
@@ -3155,6 +3190,7 @@ class RicohWebClient:
                     share_name=SHARE_NAME,
                     folder_username=TARGET_USER,
                     folder_password=TARGET_PASS,
+                    use_hostname_for_smb=use_hostname_for_smb,
                 )
                 any_skip_fallback = any_skip_fallback or skip_fallback
                 if soap_client.free_index_hint is not None:
@@ -3166,7 +3202,7 @@ class RicohWebClient:
                 continue
         return False, any_skip_fallback
 
-    def push_address_book(self, local_ip, protocol="smb"):
+    def push_address_book(self, local_ip, protocol="smb", use_hostname_for_smb=False):
         global _SOAP_DUMP_INITIALIZED
         _SOAP_DUMP_INITIALIZED = False  # nowy przebieg -> nowy plik diagnostyczny SOAP
 
@@ -3181,7 +3217,7 @@ class RicohWebClient:
         # spada do logiki HTML poniżej jako fallback.
         self.log(" Próba przez oficjalny protokół SOAP (jak Smart Device Monitor)...")
         try:
-            soap_success, soap_skip_fallback = self._try_soap_add_user(local_ip, protocol)
+            soap_success, soap_skip_fallback = self._try_soap_add_user(local_ip, protocol, use_hostname_for_smb=use_hostname_for_smb)
         except Exception as e:
             # Druga, zewnętrzna warstwa ochronna — na wypadek wyjątku poza
             # samą pętlą prób (np. w get_local_hostname()) — żeby FTP/SMB
@@ -3316,7 +3352,7 @@ class RicohWebClient:
                             self.log(" Zapisywanie wpisu (sekwencja MP 161: 3 kroki)...")
                             success = self._push_mp161_address_entry(
                                 attempt_session, base_url, save_base_path,
-                                local_ip, protocol, verify
+                                local_ip, protocol, verify, use_hostname_for_smb=use_hostname_for_smb
                             )
                             if success:
                                 self.log(" ✔ Użytkownik dodany do książki adresowej (adrsSetUser.cgi)!")
@@ -3356,7 +3392,7 @@ class RicohWebClient:
 
 
 def run_configuration(copier_ip, protocol, local_ip, map_drive, admin_user, admin_pass,
-                      logger_cb=print, include_report=True):
+                      logger_cb=print, include_report=True, use_hostname_for_smb=False):
     """
     Pełna konfiguracja (wspólna dla okna GUI i trybu CMD): środowisko Windows,
     serwer FTP (IIS) dla FTP, skrót, mapowanie dysku, wpis w książce adresowej
@@ -3387,7 +3423,7 @@ def run_configuration(copier_ip, protocol, local_ip, map_drive, admin_user, admi
         logger_cb(" UWAGA: mapowanie dysku (net use) działa tylko dla SMB — pominięto, bo wybrano protokół FTP.")
 
     client = RicohWebClient(copier_ip, admin_user, admin_pass, logger_cb)
-    success = client.push_address_book(local_ip, protocol)
+    success = client.push_address_book(local_ip, protocol, use_hostname_for_smb=use_hostname_for_smb)
 
     security_products = detect_security_software(logger_cb)
     build_security_software_exclusion_instructions(copier_ip, security_products, logger_cb)
@@ -3582,6 +3618,16 @@ class MainWindow(QMainWindow):
             r"widoczny w Eksploratorze i przetrwa restart komputera."
         )
         options_row.addWidget(self.chk_map_drive)
+
+        self.chk_use_hostname_smb = QCheckBox("SMB: adresuj po nazwie komputera (nie po IP)")
+        self.chk_use_hostname_smb.setToolTip(
+            "Domyślnie (wyłączone) drukarka łączy się po adresie IP — działa "
+            "niezależnie od sieci, ale przestaje działać po zmianie IP przez DHCP.\n"
+            "Włącz, jeśli chcesz, żeby wpis przeżył zmianę adresu IP — wymaga to "
+            "jednak działającego rozpoznawania nazw (NetBIOS/DNS) w sieci drukarki; "
+            "w sieciach z segmentacją VLAN może nie zadziałać."
+        )
+        options_row.addWidget(self.chk_use_hostname_smb)
 
         self.btn_check_ports = QPushButton("🔌 Sprawdź porty przed konfiguracją")
         self.btn_check_ports.clicked.connect(self._on_check_ports_clicked)
@@ -3843,22 +3889,24 @@ class MainWindow(QMainWindow):
 
         selected_nic_ip = self.nic_selector.currentText().strip() or get_local_ip()
         map_drive = self.chk_map_drive.isChecked()
+        use_hostname_for_smb = self.chk_use_hostname_smb.isChecked()
 
         self.btn_run.setEnabled(False)
         self.console.clear()
         protocol = "smb" if self.radio_smb.isChecked() else "ftp"
         threading.Thread(
             target=self._worker,
-            args=(copier_ip, protocol, selected_nic_ip, map_drive),
+            args=(copier_ip, protocol, selected_nic_ip, map_drive, use_hostname_for_smb),
             daemon=True
         ).start()
 
-    def _worker(self, copier_ip, protocol, local_ip, map_drive):
+    def _worker(self, copier_ip, protocol, local_ip, map_drive, use_hostname_for_smb=False):
         try:
             success, report, summary = run_configuration(
                 copier_ip, protocol, local_ip, map_drive,
                 self.admin_user.text().strip(), self.admin_pass.text(),
-                lambda msg: self.signals.log.emit(msg)
+                lambda msg: self.signals.log.emit(msg),
+                use_hostname_for_smb=use_hostname_for_smb
             )
             self._last_summary = summary
             self.signals.finished.emit(True, report)
@@ -4391,6 +4439,9 @@ def build_cli_parser():
     c = sub.add_parser("configure", help="pełna konfiguracja (komputer + wpis w drukarce)")
     common(c)
     c.add_argument("--map-drive", action="store_true", help="zmapuj folder jako dysk S: (tylko SMB)")
+    c.add_argument("--smb-use-hostname", action="store_true",
+                   help="SMB: adresuj po nazwie komputera zamiast po IP (przeżywa zmianę IP z DHCP, "
+                        "ale wymaga rozpoznawania nazw NetBIOS/DNS w sieci drukarki)")
     c.add_argument("--skip-report", action="store_true", help="pomiń pełny raport diagnostyczny na końcu")
     sub.add_parser("detect", help="wyszukaj kserokopiarki Ricoh w sieci")
     d = sub.add_parser("diagnose", help="pełny raport diagnostyczny"); common(d)
@@ -4492,19 +4543,28 @@ def cli_main(argv):
         admin_user = _cli_ask("Login administratora drukarki", "admin")
         admin_pass = _cli_ask("Hasło administratora drukarki (Enter = puste)", "", secret=True)
         map_drive = protocol == "smb" and _cli_ask("Zmapować folder jako dysk S:? (t/n)", "n").lower() in ("t", "y", "tak")
+        use_hostname_for_smb = False
+        if protocol == "smb":
+            use_hostname_for_smb = _cli_ask(
+                "SMB: adresować po nazwie komputera zamiast po IP? Tak = przeżywa zmianę IP "
+                "(DHCP), ale wymaga rozpoznawania nazw w sieci drukarki. Nie = zawsze działa, "
+                "ale przestaje po zmianie IP (t/n)", "n"
+            ).lower() in ("t", "y", "tak")
         include_report = True
     else:  # configure
         protocol, printer_ip = args.protocol, args.printer_ip
         local_ip = _cli_resolve_local_ip(args)
         admin_user, admin_pass = args.admin_user, args.admin_pass
         map_drive, include_report = args.map_drive, not args.skip_report
+        use_hostname_for_smb = args.smb_use_hostname
         if not validate_ip(printer_ip):
             print(f"Nieprawidłowy adres IP: {printer_ip}")
             return 4
 
     print(f"\nKonfiguruję: protokół={protocol.upper()}  drukarka={printer_ip}  komputer={local_ip}\n")
     success, report, _ = run_configuration(printer_ip, protocol, local_ip, map_drive,
-                                           admin_user, admin_pass, _cli_out, include_report)
+                                           admin_user, admin_pass, _cli_out, include_report,
+                                           use_hostname_for_smb=use_hostname_for_smb)
     _cli_out(report)
     print("\nZmień adres IP tego komputera na STAŁY (" + local_ip + "), aby wpis w drukarce nie przestał działać.")
     return 0 if success else 1
