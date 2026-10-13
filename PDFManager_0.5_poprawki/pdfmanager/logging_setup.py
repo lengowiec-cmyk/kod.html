@@ -59,3 +59,17 @@ def configure_logging() -> None:
 
 def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(f"pdfmanager.{name}")
+
+
+def start_hang_monitor(app):
+    """Native watchdog records stacks if Qt stops dispatching events for 15 s."""
+    import faulthandler
+    from PySide6.QtCore import QTimer
+    path=log_dir()/'hang-traces.txt'
+    if path.exists() and path.stat().st_size>MAX_LOG_BYTES:path.replace(path.with_suffix('.previous.txt'))
+    stream=path.open('a',encoding='utf-8');timer=QTimer(app);timer.setInterval(1000)
+    def arm():faulthandler.dump_traceback_later(15,repeat=True,file=stream)
+    timer.timeout.connect(arm);timer.start();arm()
+    def stop():timer.stop();faulthandler.cancel_dump_traceback_later();stream.close()
+    app.aboutToQuit.connect(stop)
+    app._hang_monitor=(timer,stream)

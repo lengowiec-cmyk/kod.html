@@ -2,9 +2,9 @@
 from dataclasses import replace
 from pathlib import Path
 from PySide6.QtCore import QBuffer, QIODevice
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor,QFont
 from PySide6.QtWidgets import (QApplication, QDialog, QFormLayout, QTextEdit, QComboBox,
- QDoubleSpinBox, QCheckBox, QPushButton, QColorDialog, QDialogButtonBox, QFileDialog, QMessageBox)
+ QFontComboBox, QDoubleSpinBox, QCheckBox, QPushButton, QColorDialog, QDialogButtonBox, QFileDialog, QMessageBox)
 from pdfmanager.pdf_engine.text_edit import TextSpan
 from pdfmanager.pdf_engine.content import insert_content_at
 
@@ -17,7 +17,7 @@ class TextStyleDialog(QDialog):
         self.text=QTextEdit();self.text.setMinimumHeight(100);self.text.setMaximumHeight(180); self.text.setPlainText(self.span.text); layout.addRow('Tekst (obsługuje wklejanie):',self.text)
         self.font_file=None
         font_button=QPushButton('Wybierz własną czcionkę TTF / OTF…');font_button.clicked.connect(self.pick_font);layout.addRow(font_button)
-        self.family=QComboBox(); self.family.addItems(['Oryginalna czcionka','DejaVu Sans']); layout.addRow('Czcionka:',self.family)
+        self.family=QFontComboBox();self.family.setCurrentFont(QFont(self.span.font_name));self._original_family=self.family.currentText();layout.addRow('Czcionka:',self.family)
         self.size=QDoubleSpinBox(); self.size.setRange(1,300);self.size.setValue(self.span.font_size);layout.addRow('Rozmiar w punktach:',self.size)
         self.bold=QCheckBox();self.bold.setChecked(self.span.bold);layout.addRow('Pogrubienie:',self.bold)
         self.italic=QCheckBox();self.italic.setChecked(self.span.italic);layout.addRow('Kursywa:',self.italic)
@@ -30,7 +30,7 @@ class TextStyleDialog(QDialog):
         selected=QColorDialog.getColor(self.color,self)
         if selected.isValid():self.color=selected
     def result_style(self):
-        return self.text.toPlainText(),replace(self.span,font_name=self.span.font_name if self.family.currentIndex()==0 and self.bold.isChecked()==self.span.bold and self.italic.isChecked()==self.span.italic else 'DejaVuSans',font_size=self.size.value(),bold=self.bold.isChecked(),italic=self.italic.isChecked(),color_rgb=(self.color.red(),self.color.green(),self.color.blue()))
+        return self.text.toPlainText(),replace(self.span,font_name=self.span.font_name if self.family.currentText()==self._original_family and self.bold.isChecked()==self.span.bold and self.italic.isChecked()==self.span.italic else 'system:'+self.family.currentFont().family(),font_size=self.size.value(),bold=self.bold.isChecked(),italic=self.italic.isChecked(),color_rgb=(self.color.red(),self.color.green(),self.color.blue()))
 
 def insert_content(parent,viewer,clipboard=False):
     if viewer is None:return

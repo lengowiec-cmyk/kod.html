@@ -1,3 +1,15 @@
+# PDFManager 0.10 — formatowanie tekstu i poprawki responsywności
+
+Dodatkowy pasek czcionek, rozmiarów i akapitów w Edytorze PDF.
+Operacje PDF, miniatury oraz lokalny zapis wykonywane z obsługą zdarzeń Qt.
+
+- [Instrukcja edycji i budowania EXE w PowerShellu](README_0.10.md)
+- [Rzeczywisty zrzut nowego paska](previews_0.10/01_pasek_formatowania.png)
+- [Wyniki testów](TEST_RESULTS_0.10.txt)
+- [Pełny projekt 0.10 w ZIP](../downloads/PDFManager_0.10_pelny_projekt.zip)
+
+Poniżej opisy wcześniejszych wydań.
+
 # PDFManager 0.9 — paczka przygotowana przed przekazaniem pracownikom
 
 Połączenie z osobnym programem właściciela przez wydzielony kanał Google Drive.

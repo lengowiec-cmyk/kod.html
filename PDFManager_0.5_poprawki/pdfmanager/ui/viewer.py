@@ -8,8 +8,9 @@ from typing import Callable, TypeVar
 
 from PySide6.QtCore import QPoint, Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QPixmap, QIcon, QPainter, QColor, QPen
-from PySide6.QtWidgets import QLabel, QScrollArea, QVBoxLayout, QWidget, QListWidget, QListWidgetItem, QSplitter, QHBoxLayout, QToolButton, QSpinBox, QStackedWidget, QApplication, QMessageBox, QInputDialog
+from PySide6.QtWidgets import QLabel, QScrollArea, QVBoxLayout, QWidget, QListWidget, QListWidgetItem, QSplitter, QHBoxLayout, QToolButton, QSpinBox, QStackedWidget, QAbstractItemView, QApplication, QMessageBox, QInputDialog
 
+from pdfmanager.dms.jobs import Cancelled
 from pdfmanager.pdf_engine import annotations
 from pdfmanager.pdf_engine.annotations import AnnotationInfo
 from pdfmanager.pdf_engine.io_utils import atomic_write_bytes
@@ -166,6 +167,7 @@ class PdfViewerWidget(QWidget):
         self._thumbnails.setViewMode(QListWidget.ViewMode.IconMode)
         self._thumbnails.setFlow(QListWidget.Flow.TopToBottom)
         self._thumbnails.setWrapping(False)
+        self._thumbnails.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self._thumbnails.setMovement(QListWidget.Movement.Static)
         self._thumbnails.setIconSize(QSize(90, 120))
         self._thumbnails.setMinimumWidth(110)
@@ -256,7 +258,7 @@ class PdfViewerWidget(QWidget):
             self.set_view_mode('single')
         self.active_tool = tool
         self._image_label.drag_preview=tool in _DRAG_TOOLS
-        self._image_label.trace_ink = tool == 'ink' 
+        self._image_label.trace_ink = tool == 'ink'
         if tool == TOOL_EDIT_TEXT:
             cursor = Qt.CursorShape.IBeamCursor
         elif tool == TOOL_NOTE:
@@ -297,24 +299,48 @@ class PdfViewerWidget(QWidget):
             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         self._thumbnails.blockSignals(False)
         self._thumbnail_cursor = 0
-        self._thumbnail_timer.start(15)
+        self._thumbnail_icons=set()
+        self._thumbnail_timer.start(50)
 
     def _render_next_thumbnail(self):
-        if not self._doc or self._thumbnail_cursor >= self.page_count:
+        from pdfmanager.ui.responsive import busy
+        if busy() or getattr(self,'_thumbnail_worker',None):return
+        if not self._doc or self.page_count==0:
             self._thumbnail_timer.stop()
             return
-        i = self._thumbnail_cursor
+        # Keep only visible thumbnails plus a small margin; thousands of pages
+        # must not allocate thousands of raster icons or spawn work for hidden rows.
+        height_pixels=self._thumbnails.viewport().height()
+        first=max(0,self._thumbnails.verticalScrollBar().value()//142-1)
+        wanted=set(range(first,min(self.page_count,first+min(24,height_pixels//142+5))))
+        wanted.update(range(max(0,self.current_page-1),min(self.page_count,self.current_page+2)))
+        previous=getattr(self,'_thumbnail_icons',set())
+        for index in previous-wanted:
+            if index<self._thumbnails.count():self._thumbnails.item(index).setIcon(QIcon())
+        self._thumbnail_icons=previous&wanted
+        missing=[n for n in sorted(wanted) if self._thumbnails.item(n).icon().isNull()]
+        if not missing:self._thumbnail_timer.setInterval(250);return
+        self._thumbnail_timer.setInterval(50);i=missing[0]
         width, height = self._doc.page_size_points(i)
-        try:image = self._doc.render_page(i, min(90/width, 120/height))
-        except Exception as exc:
-            self._thumbnail_timer.stop();self.load_failed.emit(str(self.path),str(exc));return
-        self._thumbnails.item(i).setIcon(self._page_icon(image))
-        self._thumbnail_cursor += 1
+        from pdfmanager.ui.background_job import Worker
+        from pdfmanager.ui.responsive import preview_work
+        doc=self._doc;worker=Worker(lambda:preview_work(lambda:doc.render_page(i,min(90/width,120/height))),self);self._thumbnail_worker=worker
+        def received(image):
+            if self._doc is doc and i<self._thumbnails.count():
+                self._thumbnails.item(i).setIcon(self._page_icon(image));self._thumbnail_icons.add(i)
+        worker.succeeded.connect(received)
+        worker.failed.connect(lambda error:self._thumbnail_timer.stop())
+        worker.finished.connect(lambda:setattr(self,'_thumbnail_worker',None));worker.finished.connect(worker.deleteLater);worker.start()
 
     def _render_current_page(self) -> None:
         if self._doc is None:
             return
-        image = self._doc.render_page(self.current_page, zoom=self._effective_zoom_matrix_scale())
+        self._image_label.setEnabled(False)
+        self._page_input.blockSignals(True);self._page_input.setMaximum(self.page_count);self._page_input.setValue(self.current_page+1);self._page_input.blockSignals(False)
+        self._page_total.setText(f'of {self.page_count}')
+        try:image = self._doc.render_page(self.current_page, zoom=self._effective_zoom_matrix_scale())
+        except Cancelled:
+            self._image_label.clear();self._image_label.setText('Podgląd anulowany. Wybierz stronę lub zmień powiększenie, aby spróbować ponownie.');return
         if self.night_mode:image.invertPixels()
         pixmap = QPixmap.fromImage(image)
         if self.search_query:
@@ -325,6 +351,7 @@ class PdfViewerWidget(QWidget):
                 painter.drawRect(QRectF(rect[0]*scale,rect[1]*scale,(rect[2]-rect[0])*scale,(rect[3]-rect[1])*scale))
             painter.end()
         self._image_label.setPixmap(pixmap)
+        self._image_label.setEnabled(True)
         self._image_label.resize(pixmap.size())
         self._page_input.blockSignals(True)
         self._page_input.setMaximum(self.page_count)
@@ -382,9 +409,12 @@ class PdfViewerWidget(QWidget):
         QTimer.singleShot(0,self._render_visible_multi)
 
     def _render_visible_multi(self):
+        from pdfmanager.ui.responsive import busy
+        if busy() or getattr(self,'_multi_worker',None):return
         if not self._doc or self.view_mode=='single':return
         viewport=self._multi_view.viewport().rect()
         icon_size=self._multi_view.iconSize()
+        requests=[]
         for row in range(self._multi_view.count()):
             item=self._multi_view.item(row);index=item.data(Qt.ItemDataRole.UserRole)
             visible=self._multi_view.visualItemRect(item).intersects(viewport)
@@ -396,9 +426,28 @@ class PdfViewerWidget(QWidget):
             if not item.icon().isNull():continue
             width,height=self._doc.page_size_points(index)
             scale=min(icon_size.width()/width,icon_size.height()/height)
-            image=self._doc.render_page(index,scale)
-            if self.night_mode:image.invertPixels()
-            item.setIcon(self._page_icon(image))
+            requests.append((row,index,scale))
+            if len(requests)>=4:break
+        if not requests:return
+        from pdfmanager.ui.background_job import Worker
+        doc=self._doc;mode=self.view_mode
+        completed=[]
+        from pdfmanager.ui.responsive import preview_work
+        worker=Worker(lambda:preview_work(lambda:[(row,index,doc.render_page(index,scale)) for row,index,scale in requests]),self);self._multi_worker=worker
+        def received(results):
+            completed.append(True)
+            if self._doc is not doc or self.view_mode!=mode:return
+            for row,index,image in results:
+                item=self._multi_view.item(row)
+                if item and item.data(Qt.UserRole)==index:
+                    if self.night_mode:image.invertPixels()
+                    item.setIcon(self._page_icon(image))
+        worker.succeeded.connect(received)
+        def finished():
+            self._multi_worker=None
+            if completed and self._doc is doc:QTimer.singleShot(0,self._render_visible_multi)
+        worker.failed.connect(lambda error:self.load_failed.emit(str(self.path),error))
+        worker.finished.connect(finished);worker.finished.connect(worker.deleteLater);worker.start()
 
     def _activate_multi_page(self,item):
         index=item.data(Qt.ItemDataRole.UserRole)
@@ -416,7 +465,7 @@ class PdfViewerWidget(QWidget):
         if self._doc is None:
             return
         page_index = max(0, min(page_index, self._doc.page_count - 1))
-        if page_index != self.current_page:
+        if page_index != self.current_page or not self._image_label.isEnabled():
             self.current_page = page_index
             self._render_current_page()
 
@@ -505,7 +554,11 @@ class PdfViewerWidget(QWidget):
             options=self.pending_content
             display_rect=pymupdf.Rect(rect)*self._doc.rotation_matrix(self.current_page)
             try:
-                self._mutate_file(lambda:insert_content_at(self.path,self.current_page,tuple(display_rect),**options))
+
+                if 'rich' in options:
+                    from pdfmanager.pdf_engine.rich_text import insert_rich_text
+                    self._mutate_file(lambda:insert_rich_text(self.path,self.current_page,tuple(display_rect),options['rich']))
+                else:self._mutate_file(lambda:insert_content_at(self.path,self.current_page,tuple(display_rect),**options))
                 self.pending_content=None;self.set_active_tool(TOOL_SELECT)
             except Exception as exc:QMessageBox.warning(self,'Wstawianie',str(exc))
             return
@@ -569,9 +622,7 @@ class PdfViewerWidget(QWidget):
         uchwytem (nawet tylko do odczytu, do renderowania) kończy się
         błędem systemowym — inaczej niż na Linuksie/macOS.
         """
-        if self._doc is not None:
-            self._doc.close()
-            self._doc = None
+        self.release_document()
         try:
             result = fn()
         finally:
@@ -679,6 +730,11 @@ class PdfViewerWidget(QWidget):
         """Zamyka własny uchwyt pliku — do użycia przed operacją zewnętrzną
         (np. w oknie zarządzania stronami), by nie blokować pliku na Windows."""
         self._thumbnail_timer.stop()
+        for name in ('_thumbnail_worker','_multi_worker'):
+            worker=getattr(self,name,None)
+            if worker and worker.isRunning():
+                worker.control.cancelled.set()
+                if not worker.wait(1500):raise RuntimeError('Podgląd kończy pracę. Ponów operację za chwilę.')
         if self._doc is not None:
             self._doc.close()
             self._doc = None
@@ -691,6 +747,12 @@ class PdfViewerWidget(QWidget):
         self._render_current_page()
 
     def closeEvent(self, event) -> None:
+        from pdfmanager.ui.background_job import Worker
+        running=[w for w in self.findChildren(Worker) if w.isRunning()]
+        if running:
+            self._thumbnail_timer.stop();event.ignore()
+            for worker in running:worker.control.cancelled.set();worker.finished.connect(self.close)
+            return
         self.release_document()
         if self.working_copy:self.working_copy.close()
         super().closeEvent(event)

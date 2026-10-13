@@ -48,7 +48,7 @@ a = Analysis(
         "keyring.backends.kwallet",
         "pyhanko.sign.validation",
         "pyhanko.sign.signers",
-    ]+collect_submodules('pdfmanager.pdf_engine')+collect_submodules('pdfmanager.security')+['zxingcpp'],
+    ]+collect_submodules('pdfmanager.pdf_engine')+collect_submodules('pdfmanager.security')+['zxingcpp','numpy'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

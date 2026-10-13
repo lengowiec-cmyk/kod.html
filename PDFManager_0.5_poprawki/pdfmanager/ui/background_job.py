@@ -13,6 +13,8 @@ class Worker(QThread):
         except Exception as exc:self.failed.emit(str(exc))
 
 class BusyDialog(QProgressDialog):
+    def cancel(self):
+        super().cancel();self.canceled.emit()
     def reject(self):self.cancel()
     def closeEvent(self,event):self.cancel();event.ignore()
 

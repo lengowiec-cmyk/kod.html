@@ -189,6 +189,11 @@ class MainWindow(QMainWindow):
         self._build_menu()
         self._build_toolbar()
         self._build_classic_ribbon()
+        from pdfmanager.ui.word_format import WordFormatBar
+        self._word_format=WordFormatBar(self._text_properties,self)
+        self._central_layout.insertWidget(0,self._word_format)
+        self._word_format.setVisible(False)
+        self._shell.tabs.currentChanged.connect(lambda index:self._word_format.setVisible(index==3))
 
         translator.language_changed.connect(self.retranslate_ui)
         self.retranslate_ui()
@@ -908,7 +913,8 @@ class MainWindow(QMainWindow):
         if not viewer.working_copy or getattr(viewer,'require_save_as',False):return self._save_as_local()
         if QMessageBox.question(self,'Zapisz dokument','Zapisać zmiany w pliku źródłowym? Poprzednia wersja zostanie zachowana w kopii zapasowej.')!=QMessageBox.Yes:return
         try:
-            viewer.working_copy.save();self._tabs.setTabText(self._tabs.indexOf(viewer),viewer.source_path.name)
+            from pdfmanager.ui.responsive import run
+            run(viewer.working_copy.save,self,'Zapisywanie dokumentu…');self._tabs.setTabText(self._tabs.indexOf(viewer),viewer.source_path.name)
             self.statusBar().showMessage('Zapisano lokalnie. Synchronizacja folderu Google Drive jest obsługiwana przez aplikację Google.',4000)
             return True
         except Exception as exc:QMessageBox.warning(self,'Zapis dokumentu',str(exc))
@@ -945,11 +951,13 @@ class MainWindow(QMainWindow):
         try:
             if target_path.exists() and QMessageBox.question(self,'Zapisz jako','Plik istnieje. Utworzyć kopię zapasową i nadpisać?')!=QMessageBox.Yes:return
             if viewer.working_copy:
-                viewer.working_copy.save(target_path)
+                from pdfmanager.ui.responsive import run
+                run(lambda:viewer.working_copy.save(target_path),self,'Zapisywanie dokumentu…')
                 viewer.source_path=target_path.resolve()
             else:
                 from pdfmanager.pdf_engine.io_utils import atomic_write_bytes
-                atomic_write_bytes(target_path,viewer.path.read_bytes())
+                from pdfmanager.ui.responsive import run
+                run(lambda:atomic_write_bytes(target_path,viewer.path.read_bytes()),self,'Zapisywanie kopii…')
         except OSError as exc:
             _logger.exception("Zapisz jako nie powiodlo sie: %s -> %s", viewer.path, target_path)
             QMessageBox.critical(self, translator.tr("menu.file.save_as"), str(exc))
@@ -991,28 +999,14 @@ class MainWindow(QMainWindow):
         settings.last_folder = path
         self._update_status_bar()
 
-    # Kopia robocza (pełna kopia pliku + SHA-256 całej treści, patrz
-    # dms/recovery.WorkingCopy) poniżej tego rozmiaru jest szybka na lokalnym
-    # dysku i tworzenie jej synchronicznie nie jest odczuwalne. Powyżej —
-    # zwłaszcza na udziale sieciowym szafki DMS — blokowałaby UI na dłużej,
-    # bez progress bara i bez możliwości anulowania, więc idzie w tło.
-    _ASYNC_OPEN_THRESHOLD_BYTES = 8 * 1024 * 1024
-
     def _build_working_copy(self, path: str):
+        # Even a small cloud placeholder can require a long network read.
         from pdfmanager.dms.recovery import WorkingCopy
-        try:
-            size = Path(path).stat().st_size
-        except OSError:
-            size = 0
-        if size <= self._ASYNC_OPEN_THRESHOLD_BYTES:
-            try:return WorkingCopy(path)
-            except Exception as exc:
-                self._on_load_failed(path,str(exc))
-                return None
-        from pdfmanager.ui.background_job import run_job
-        result_box = {}
-        run_job(self, 'Otwieranie dokumentu…', lambda: WorkingCopy(path), lambda wc: result_box.update(value=wc))
-        return result_box.get('value')  # None jeśli anulowano albo wystąpił błąd
+        from pdfmanager.ui.responsive import run
+        from pdfmanager.dms.jobs import Cancelled
+        try:return run(lambda:WorkingCopy(path),self,'Tworzenie bezpiecznej kopii dokumentu…')
+        except Cancelled:return None
+        except Exception as exc:self._on_load_failed(path,str(exc));return None
 
     def open_document(self, path: str) -> None:
         if hasattr(self,'_shell'):
@@ -1372,6 +1366,7 @@ class MainWindow(QMainWindow):
         self._blocked_action_states={a:a.isEnabled() for a in self.findChildren(QAction)}
         for action in self._blocked_action_states:action.setEnabled(False)
         self._workspace_stack.setEnabled(False);self._shell.setEnabled(False)
+        self._word_format.setEnabled(False);self._text_properties.setEnabled(False)
         for bar in self.findChildren(__import__('PySide6.QtWidgets',fromlist=['QToolBar']).QToolBar):bar.setEnabled(False)
         dialog=ActivationDialog(self.license_manager,self,allow_cancel=False,message_key='license.blocked_message')
         from pdfmanager.licensing.license_manager import LicenseState
@@ -1383,6 +1378,7 @@ class MainWindow(QMainWindow):
         if accepted and not self.license_manager.get_status().is_blocked:
             for action,enabled in self._blocked_action_states.items():action.setEnabled(enabled)
             self._workspace_stack.setEnabled(True);self._shell.setEnabled(True)
+            self._word_format.setEnabled(True);self._text_properties.setEnabled(True)
             for bar in self.findChildren(__import__('PySide6.QtWidgets',fromlist=['QToolBar']).QToolBar):bar.setEnabled(True)
             self._transport_timer.start();self._update_license_status_bar()
         else:self.close()

@@ -1,0 +1,48 @@
+PDFManager 0.10 — weryfikacja w Linux, Python 3.12, PySide6 6.12.0
+
+Pełny zestaw:
+QT_QPA_PLATFORM=offscreen XDG_CACHE_HOME=/tmp/pdfmanager-cache
+XDG_CONFIG_HOME=/tmp/pdm10-config XDG_DATA_HOME=/tmp/pdm10-data
+python -m pytest -q -o faulthandler_timeout=45
+392 passed, 1 xfailed in 225.48s (0:03:45).
+Oczekiwany błąd OCR: wielka litera Ź bywa rozpoznawana jako Ż.
+
+Po końcowym dopracowaniu wyboru bieżącej czcionki wykonano ponownie:
+python -m pytest tests/test_word_010.py -q -o faulthandler_timeout=30
+10 passed. To podzbiór pełnego zestawu, a nie dodatkowe 10 testów ponad 392.
+
+Sprawdzono rzeczywisty zapis tekstu z polskimi znakami do PDF, rozmiar,
+pogrubienie, kolor, podkreślenie, akapity, listy i ramkę; zachowanie oryginału,
+cofanie oraz atomową odmowę zapisu przy zbyt małym polu. Ciąg <script> jest
+zapisywany jako tekst, a nie wykonywany ani wczytywany jako kod/zasób.
+
+Sprawdzono odbieranie zdarzeń Qt podczas oczekiwania na zadanie, zachowanie
+klasy wyjątku, anulowanie i zakończenie wątku, odmowę edycji starego obrazu po
+anulowaniu zmiany strony, ponowienie podglądu oraz ograniczoną liczbę ikon
+miniatur w dokumencie 200-stronicowym. Osobny test sprawdza maksymalnie jeden
+równoczesny renderer podglądu dla kart. Kopia małego pliku powstaje w innym
+wątku niż główny Qt. Testy na miniatury oczekują ich asynchronicznego wyniku,
+a nie zakładają zakończenia podczas blokującego GUI wywołania.
+
+Dodatkowo wykonano próbę renderera: indeks górny ma podniesioną pozycję,
+indeks dolny opuszczoną, kursywa ma właściwą flagę fontu w PDF, przekreślenie
+i zakreślenie tworzą elementy graficzne. Wyrównanie do prawej zmienia pozycję
+tekstu na stronie.
+
+Pełny zestaw obejmuje również dotychczasowe operacje PDF, szafki, spedycję,
+kopie zapasowe, konflikty, skanowanie/OCR dostępne w środowisku, protokół
+podpisanych poleceń, blokady, okres dostępu, pobieranie i kontrolę aktualizacji.
+
+Uruchomiono rzeczywiste okno Qt i wykonano zrzut ze skalowaniem 200% DPI,
+z dokumentem i danymi demonstracyjnymi: previews_0.10/01_pasek_formatowania.png.
+git diff --check: bez błędów białych znaków.
+
+W przesłanym logu jest starszy brak numpy; dla ostatnich uruchomień log nie
+zawiera stosu zawieszenia. W tej wersji jawnie dołączono numpy w specyfikacjach
+PyInstaller i dodano diagnostykę hang-traces.txt dla zatrzymanej pętli Qt.
+Nie odtworzono dokładnie zgłoszonego komunikatu Windows w środowisku Linux.
+
+Nie zbudowano Windows EXE i nie przetestowano prawdziwego Windows, Defendera,
+DPAPI, Google Drive Desktop ani sterowników drukarki/skanera. Zmiany usuwają
+konkretne oczekiwanie na pracę PDF w wątku okna, ale nie stanowią gwarancji,
+że każdy uszkodzony plik, błąd sterownika lub problem systemowy jest obsłużony.

@@ -81,6 +81,10 @@ def atomic_copy_file(source: Path,target: Path) -> None:
     temporary=Path(name)
     try:
         with os.fdopen(fd,'wb') as output,Path(source).open('rb') as input_file:
-            shutil.copyfileobj(input_file,output,1024*1024);output.flush();os.fsync(output.fileno())
+            while True:
+                checkpoint();block=input_file.read(1024*1024)
+                if not block:break
+                output.write(block)
+            output.flush();os.fsync(output.fileno())
         checkpoint();temporary.replace(target)
     finally:temporary.unlink(missing_ok=True)

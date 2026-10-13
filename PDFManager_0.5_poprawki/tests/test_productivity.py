@@ -189,8 +189,11 @@ def test_panel_applies_font_size_without_changing_source(qapp,tmp_path):
     win=MainWindow();win.show();win.open_document(str(path));viewer=win._current_viewer()
     span=viewer._text_engine.extract_spans(viewer.path,0)[0]
     win._text_properties.show();win._on_edit_span_requested(viewer,span)
-    editor=win._text_properties.widget();editor.size.setValue(22)
-    editor.findChild(QDialogButtonBox).accepted.emit()
+    from PySide6.QtGui import QTextCursor
+    editor=win._text_properties.editor;cursor=editor.textCursor();cursor.select(QTextCursor.Document);editor.setTextCursor(cursor)
+    win._word_format.size.setCurrentText('22');win._word_format.set_size()
+    win._text_properties.width.setValue(250);win._text_properties.height.setValue(60)
+    win._text_properties.apply()
     assert viewer._text_engine.extract_spans(viewer.path,0)[0].font_size==22
     assert path.read_bytes()==before
     win.close()

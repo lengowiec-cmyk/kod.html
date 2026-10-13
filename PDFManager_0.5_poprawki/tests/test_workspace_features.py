@@ -27,7 +27,11 @@ def test_views_comparison_and_workspace(qapp,tmp_path):
     assert win._shell.tabs.count()==8
     viewer=win._current_viewer()
     for mode in ('continuous','two','book','grid'):
-        viewer.set_view_mode(mode);QTest.qWait(30)
+        viewer.set_view_mode(mode)
+        # Rasterization now runs in the background; wait for its delivered result.
+        import time
+        deadline=time.monotonic()+5
+        while time.monotonic()<deadline and not any(not viewer._multi_view.item(i).icon().isNull() for i in range(viewer._multi_view.count())):QTest.qWait(20)
         assert viewer._page_views.currentWidget()==viewer._multi_view
         assert any(not viewer._multi_view.item(i).icon().isNull() for i in range(viewer._multi_view.count()))
     viewer.set_view_mode('single');original=viewer._image_label.pixmap().toImage().pixelColor(0,0)

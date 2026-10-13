@@ -51,6 +51,8 @@ def main() -> int:
     # żeby ewentualna awaria była widoczna w log.txt, a nie "znikała" bez
     # śladu (wersja .exe nie ma okna konsoli).
     configure_logging()
+    from pdfmanager.logging_setup import start_hang_monitor
+    start_hang_monitor(app)
     logger = get_logger("main")
     logger.info("Wersja jezyka ustawien: %s, motyw: %s", settings.language, settings.theme)
 

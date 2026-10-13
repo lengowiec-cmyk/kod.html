@@ -40,7 +40,7 @@ def test_full_enrollment_block_code_and_release_documents_unchanged(channel,tmp_
 def test_signed_update_hash_and_payload_tampering(channel,tmp_path,monkeypatch):
     owner,config,state,client,parent=channel;client.poll();ingest_hellos(owner)
     installer=tmp_path/'installer.exe';installer.write_bytes(b'MZsynthetic-not-executed')
-    release=owner.release(installer,'0.9.1',config['base_url']);owner.command(client.device,False,update=release)
+    release=owner.release(installer,'0.10.1',config['base_url']);owner.command(client.device,False,update=release)
     envelope=client.poll();cached=client.download(envelope,tmp_path/'cache');assert cached.read_bytes()==installer.read_bytes()
     cached.unlink();(owner.web/'updates'/cached.name).write_bytes(b'MZmodified')
     with pytest.raises(ValueError,match='rozmiar|SHA-256'):client.download(envelope,tmp_path/'cache')
@@ -50,7 +50,7 @@ def test_signed_update_hash_and_payload_tampering(channel,tmp_path,monkeypatch):
 
 def test_signed_update_defender_failure_never_executes(channel,tmp_path,monkeypatch):
     owner,config,state,client,_=channel;client.poll();ingest_hellos(owner)
-    installer=tmp_path/'setup.exe';installer.write_bytes(b'MZtest');release=owner.release(installer,'0.9.1',config['base_url']);envelope=owner.command(client.device,False,update=release)
+    installer=tmp_path/'setup.exe';installer.write_bytes(b'MZtest');release=owner.release(installer,'0.10.1',config['base_url']);envelope=owner.command(client.device,False,update=release)
     root=tmp_path/'installed';root.mkdir();(root/'PDFManager.exe').write_bytes(b'MZtest')
     from pdfmanager.remote import updater
     monkeypatch.setattr(updater,'RemoteState',lambda:state)
@@ -73,7 +73,7 @@ def test_redirected_channel_directories_cannot_touch_documents(channel,tmp_path,
         with pytest.raises(ValueError):client.poll()
     else:
         installer=tmp_path/'setup.exe';installer.write_bytes(b'MZtest')
-        with pytest.raises(ValueError):owner.release(installer,'0.9.1',config['base_url'])
+        with pytest.raises(ValueError):owner.release(installer,'0.10.1',config['base_url'])
     assert list(outside.iterdir())==[outside/'important.pdf'];assert (outside/'important.pdf').read_bytes()==b'DO NOT CHANGE'
 
 def test_link_to_channel_root_is_rejected(channel,tmp_path):
@@ -191,7 +191,7 @@ def test_installer_scan_is_mandatory_and_uses_no_remediation(tmp_path,monkeypatc
 
 def test_tampering_during_update_scan_prevents_execution(channel,tmp_path,monkeypatch):
     owner,config,state,client,_=channel;client.poll();ingest_hellos(owner)
-    installer=tmp_path/'setup.exe';installer.write_bytes(b'MZsafe');release=owner.release(installer,'0.9.1',config['base_url']);envelope=owner.command(client.device,False,update=release)
+    installer=tmp_path/'setup.exe';installer.write_bytes(b'MZsafe');release=owner.release(installer,'0.10.1',config['base_url']);envelope=owner.command(client.device,False,update=release)
     root=tmp_path/'install';root.mkdir();(root/'PDFManager.exe').write_bytes(b'MZtest')
     from pdfmanager.remote import updater
     from pdfmanager.security import antivirus

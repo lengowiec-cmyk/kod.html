@@ -2,7 +2,7 @@
 from pathlib import Path
 import base64,dataclasses,functools,importlib,json,os,subprocess,sys,tempfile,time
 WORKER_MODE=False
-ALLOWED_MODULES={'annotations','page_ops','content','extended_ops','workflows','utilities','transport_ops'}
+ALLOWED_MODULES={'annotations','page_ops','content','extended_ops','workflows','utilities','transport_ops','rich_text'}
 TYPES={'TextSpan':'text_edit','EditResult':'text_edit','AnnotationInfo':'annotations','FormField':'workflows'}
 class ProcessingError(RuntimeError):pass
 
@@ -32,6 +32,13 @@ def decode(value):
     return value
 
 def call(operation,*args,**kwargs):
+    if not WORKER_MODE:
+        from PySide6.QtWidgets import QApplication
+        from PySide6.QtCore import QThread
+        app=QApplication.instance()
+        if isinstance(app,QApplication) and QThread.currentThread()==app.thread():
+            from pdfmanager.ui.responsive import run
+            return run(lambda:call(operation,*args,**kwargs))
     from pdfmanager.dms.jobs import checkpoint
     from .antivirus import scan_arguments
     scan_arguments(args)

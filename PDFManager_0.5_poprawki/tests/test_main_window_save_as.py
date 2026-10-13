@@ -95,15 +95,21 @@ def test_save_as_local_clears_drive_association(qapp, tmp_path):
     win.close()
 
 
-def test_open_document_above_threshold_builds_copy_in_background(qapp, tmp_path, monkeypatch):
+def test_open_document_builds_even_small_copy_in_background(qapp, tmp_path, monkeypatch):
     win = MainWindow()
-    monkeypatch.setattr(MainWindow, "_ASYNC_OPEN_THRESHOLD_BYTES", 0)  # wymuś ścieżkę run_job nawet dla małego pliku
+    import threading
+    from pdfmanager.dms.recovery import WorkingCopy
+    main_thread=threading.get_ident();threads=[]
+    def build(*args,**kwargs):
+        threads.append(threading.get_ident());return WorkingCopy(*args,**kwargs)
+    monkeypatch.setattr('pdfmanager.dms.recovery.WorkingCopy',build)
     source = tmp_path / "duzy_skan.pdf"
     _make_pdf(source, "Tresc skopiowana w tle")
     win.open_document(str(source))
 
     viewer = win._current_viewer()
     assert viewer is not None and viewer.is_loaded
+    assert threads and all(t!=main_thread for t in threads)
     assert viewer.working_copy is not None and viewer.working_copy.path.is_file()
     assert "Tresc skopiowana w tle" in pymupdf.open(str(viewer.path))[0].get_text()
     win.close()
@@ -111,11 +117,9 @@ def test_open_document_above_threshold_builds_copy_in_background(qapp, tmp_path,
 
 def test_open_document_cancelled_background_copy_opens_nothing(qapp, tmp_path, monkeypatch):
     win = MainWindow()
-    monkeypatch.setattr(MainWindow, "_ASYNC_OPEN_THRESHOLD_BYTES", 0)
-    monkeypatch.setattr(
-        "pdfmanager.ui.background_job.run_job",
-        lambda parent, title, function, on_success=None: None,
-    )
+    from pdfmanager.dms.jobs import Cancelled
+    def cancelled(*args,**kwargs):raise Cancelled('Cancelled copy')
+    monkeypatch.setattr('pdfmanager.ui.responsive.run',cancelled)
     source = tmp_path / "anulowany.pdf"
     _make_pdf(source)
     win.open_document(str(source))
