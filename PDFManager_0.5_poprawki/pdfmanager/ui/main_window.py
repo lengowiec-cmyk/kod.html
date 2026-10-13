@@ -1,5 +1,6 @@
 """Główne okno aplikacji — Etap 1 (fundament): przeglądanie lokalnych PDF-ów."""
 from __future__ import annotations
+from pdfmanager.i18n.translator import translator
 
 from pdfmanager.security.limits import safe_open
 
@@ -126,6 +127,7 @@ class MainWindow(QMainWindow):
         self._viewer_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._viewer_placeholder.setWordWrap(True)
         self._tabs = QTabWidget(self)
+        self._tabs.tabBar().setProperty("i18nSkip", True)
         self._tabs.setTabsClosable(True)
         self._tabs.setDocumentMode(True)
         self._tabs.tabCloseRequested.connect(self._close_tab)
@@ -195,6 +197,8 @@ class MainWindow(QMainWindow):
         self._word_format.setVisible(False)
         self._shell.tabs.currentChanged.connect(lambda index:self._word_format.setVisible(index==3))
 
+        from pdfmanager.i18n.bindings import install_ui_translations
+        self._ui_translations = install_ui_translations(self)
         translator.language_changed.connect(self.retranslate_ui)
         self.retranslate_ui()
 
@@ -629,7 +633,7 @@ class MainWindow(QMainWindow):
         self._transport_leases={}
         self._transport_timer=QTimer(self);self._transport_timer.setInterval(60000);self._transport_timer.timeout.connect(self._transport_tick);self._transport_timer.start()
         self._transport_sending=False
-        self._drive_queue_status=QLabel('Google Drive: brak oczekujących zapisów');self.statusBar().addPermanentWidget(self._drive_queue_status)
+        self._drive_queue_status=QLabel(translator.text('Google Drive: brak oczekujących zapisów'));self.statusBar().addPermanentWidget(self._drive_queue_status)
         self._refresh_drive_queue_status()
         from pdfmanager.remote.controller import RemoteController
         self._remote_controller=RemoteController(self)
@@ -647,7 +651,7 @@ class MainWindow(QMainWindow):
         from pdfmanager.pdf_engine.workflows import merge_inputs
         from PySide6.QtCore import QStandardPaths
         from uuid import uuid4
-        path,_=QFileDialog.getOpenFileName(self,'Otwórz obraz','','Obrazy (*.png *.jpg *.jpeg *.tif *.tiff *.bmp *.webp)')
+        path,_=QFileDialog.getOpenFileName(self,translator.text('Otwórz obraz'),'','Obrazy (*.png *.jpg *.jpeg *.tif *.tiff *.bmp *.webp)')
         if not path:return
         folder=Path(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.CacheLocation))/'images'/uuid4().hex
         folder.mkdir(parents=True,exist_ok=True)
@@ -688,7 +692,7 @@ class MainWindow(QMainWindow):
 
     def _show_shortcuts(self):
         from PySide6.QtWidgets import QTableWidget,QTableWidgetItem
-        dialog=QDialog(self);dialog.setWindowTitle('Skróty klawiatury');dialog.resize(600,430)
+        dialog=QDialog(self);dialog.setWindowTitle(translator.text('Skróty klawiatury'));dialog.resize(600,430)
         layout=QVBoxLayout(dialog);table=QTableWidget(0,2);table.setHorizontalHeaderLabels(['Funkcja','Skrót'])
         for action in self.findChildren(QAction):
             if not action.shortcut().isEmpty():
@@ -751,7 +755,7 @@ class MainWindow(QMainWindow):
             if self._compare_temp:self._compare_temp.cleanup();self._compare_temp=None
             return
         if self._tabs.count()<2:
-            QMessageBox.information(self,'Dwa dokumenty','Otwórz co najmniej dwa dokumenty.');return
+            QMessageBox.information(self,translator.text('Dwa dokumenty'),'Otwórz co najmniej dwa dokumenty.');return
         self._refresh_comparison(force=True)
 
     def _refresh_comparison(self,*_,force=False):
@@ -780,7 +784,7 @@ class MainWindow(QMainWindow):
 
     def _export_nup(self):
         from pdfmanager.pdf_engine.workflows import nup_document
-        selected,ok=QInputDialog.getItem(self,'Strony na arkuszu','Liczba stron:', ['1','2','4','6','9'],1,False)
+        selected,ok=QInputDialog.getItem(self,translator.text('Strony na arkuszu'),'Liczba stron:', ['1','2','4','6','9'],1,False)
         if ok:self._tools.export('Strony na arkuszu',lambda src,out:nup_document(src,out,int(selected)))
 
     def _print_document(self):
@@ -839,7 +843,7 @@ class MainWindow(QMainWindow):
         if not ok:return
         dpi,ok=QInputDialog.getInt(self,'Eksport obrazów','DPI:',150,72,600)
         if not ok:return
-        folder=QFileDialog.getExistingDirectory(self,'Folder docelowy')
+        folder=QFileDialog.getExistingDirectory(self,translator.text('Folder docelowy'))
         if folder:run_job(self,'Eksport obrazów',lambda:export_images(viewer.path,Path(folder),indices,dpi,fmt),lambda files:QMessageBox.information(self,'Eksport obrazów',f'Wyeksportowano {len(files)} stron.'))
 
     def _export_pdf_copy(self, title, operation):
@@ -898,7 +902,7 @@ class MainWindow(QMainWindow):
         from pdfmanager.dms.preferences import Preferences
         paths=Preferences().get('recent',[])
         if not paths:return
-        path,ok=QInputDialog.getItem(self,'Ostatnie dokumenty','Dokument:',paths,0,False)
+        path,ok=QInputDialog.getItem(self,translator.text('Ostatnie dokumenty'),'Dokument:',paths,0,False)
         if ok:self.open_document(path)
 
     def _working_copy_changed(self,viewer):
@@ -949,7 +953,7 @@ class MainWindow(QMainWindow):
             target_path = target_path.with_suffix(".pdf")
 
         try:
-            if target_path.exists() and QMessageBox.question(self,'Zapisz jako','Plik istnieje. Utworzyć kopię zapasową i nadpisać?')!=QMessageBox.Yes:return
+            if target_path.exists() and QMessageBox.question(self,translator.text('Zapisz jako'),'Plik istnieje. Utworzyć kopię zapasową i nadpisać?')!=QMessageBox.Yes:return
             if viewer.working_copy:
                 from pdfmanager.ui.responsive import run
                 run(lambda:viewer.working_copy.save(target_path),self,'Zapisywanie dokumentu…')
@@ -1178,7 +1182,7 @@ class MainWindow(QMainWindow):
         try:
             owner=Preferences().get('transport_employee','')
             if not owner:
-                owner,ok=QInputDialog.getText(self,'Pracownik','Imię / identyfikator do historii zmian:')
+                owner,ok=QInputDialog.getText(self,translator.text('Pracownik'),'Imię / identyfikator do historii zmian:')
                 if not ok or not owner.strip():return False
                 Preferences().put('transport_employee',owner.strip())
             account=getattr(info.client,'_team_account_id','')
@@ -1227,8 +1231,17 @@ class MainWindow(QMainWindow):
         from pdfmanager.drive.teamwork import Outbox
         try:
             entries=Outbox().items();waiting=sum(e['state']=='Oczekuje na wysłanie' for e in entries);conflicts=sum(e['state']=='Konflikt' for e in entries)
-            self._drive_queue_status.setText(f'Drive: oczekuje {waiting} • konflikty {conflicts}')
-        except Exception:self._drive_queue_status.setText('Drive: błąd odczytu kolejki — sprawdź centrum spedycji')
+            self._drive_queue_counts=(waiting,conflicts);self._drive_queue_error=False
+        except Exception:self._drive_queue_error=True
+        self._translate_drive_queue_status()
+
+    def _translate_drive_queue_status(self):
+        if not hasattr(self,'_drive_queue_status'):return
+        if getattr(self,'_drive_queue_error',False):
+            self._drive_queue_status.setText(translator.text('Drive: błąd odczytu kolejki — sprawdź centrum spedycji'))
+        else:
+            waiting,conflicts=getattr(self,'_drive_queue_counts',(0,0))
+            self._drive_queue_status.setText(translator.text('Drive: oczekuje {waiting} • konflikty {conflicts}', waiting=waiting, conflicts=conflicts))
 
     def _open_transport_center(self):
         from pdfmanager.ui.transport_center import TransportCenter
@@ -1592,7 +1605,7 @@ class MainWindow(QMainWindow):
         self._action_open_file.setText(translator_.tr("menu.file.open_file"))
         self._action_save_as_local.setText(translator_.tr("menu.file.save_as"))
         self._action_drive_connect.setText(translator_.tr("menu.file.drive_connect"))
-        self._action_drive_save.setText('Dodaj do kolejki Google Drive')
+        self._action_drive_save.setText(translator.text('Dodaj do kolejki Google Drive'))
         self._action_drive_save.setToolTip('Zapisuje zaszyfrowaną migawkę lokalną; wysyłanie tworzy osobny plik wersji na Drive.')
         self._action_drive_save_as_new.setText(translator_.tr("menu.file.drive_save_as_new"))
         # Wyszarzone dla dokumentów lokalnych — tooltip wyjaśnia dlaczego,
@@ -1647,6 +1660,9 @@ class MainWindow(QMainWindow):
 
         self._update_status_bar()
         self._update_undo_redo_actions()
+        self._translate_drive_queue_status()
+        if hasattr(self, "_ui_translations"):
+            self._ui_translations.retranslate(self)
 
     # ------------------------------------------------------------- zamknięcie
     def closeEvent(self, event) -> None:

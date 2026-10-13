@@ -1,5 +1,6 @@
 """Widżet podglądu jednego dokumentu PDF (jedna karta w QTabWidget)."""
 from __future__ import annotations
+from pdfmanager.i18n.translator import translator
 
 from pdfmanager.security.limits import safe_open
 
@@ -519,7 +520,7 @@ class PdfViewerWidget(QWidget):
             for annot in annotations.list_annotations(self.path,self.current_page):
                 x0,y0,x1,y1=annot.rect
                 if annot.type_name=='Text' and x0<=x<=x1 and y0<=y<=y1:
-                    text,ok=QInputDialog.getMultiLineText(self,'Notatka','Treść:',annot.content)
+                    text,ok=QInputDialog.getMultiLineText(self,translator.text('Notatka'),translator.text('Treść:'),annot.content)
                     if ok and text!=annot.content:self._mutate_file(lambda:annotations.update_note(self.path,self.current_page,annot.xref,text))
                     return
             return

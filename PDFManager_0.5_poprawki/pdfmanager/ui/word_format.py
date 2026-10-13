@@ -1,4 +1,5 @@
 """Independent office-style controls; all commands operate on the text draft."""
+from pdfmanager.i18n.translator import translator
 from PySide6.QtCore import Qt,QSignalBlocker
 from PySide6.QtGui import QFont,QTextCharFormat,QTextBlockFormat,QTextListFormat,QTextCursor,QColor,QDoubleValidator
 from PySide6.QtWidgets import QWidget,QHBoxLayout,QVBoxLayout,QLabel,QToolButton,QFontComboBox,QComboBox,QColorDialog,QScrollArea,QTextEdit
@@ -83,8 +84,8 @@ class WordFormatBar(QWidget):
     def clear_format(self):
         f=QTextCharFormat();f.setFont(QFont(self.family.currentText(),11));self.editor.textCursor().setCharFormat(f);self.editor.setCurrentCharFormat(f)
     def paint_format(self):
-        if self.painter_format is None:self.painter_format=QTextCharFormat(self.editor.currentCharFormat());self.panel.message.setText('Zaznacz tekst docelowy i kliknij Malarz formatów ponownie.')
-        else:self.editor.mergeCurrentCharFormat(self.painter_format);self.painter_format=None;self.panel.message.setText('Format zastosowany w szkicu.')
+        if self.painter_format is None:self.painter_format=QTextCharFormat(self.editor.currentCharFormat());self.panel.message.setText(translator.text('Zaznacz tekst docelowy i kliknij Malarz formatów ponownie.'))
+        else:self.editor.mergeCurrentCharFormat(self.painter_format);self.painter_format=None;self.panel.message.setText(translator.text('Format zastosowany w szkicu.'))
     def list_format(self,numbered):
         fmt=QTextListFormat();fmt.setStyle(QTextListFormat.ListDecimal if numbered else QTextListFormat.ListDisc);fmt.setIndent(1);self.editor.textCursor().createList(fmt)
     def indent(self,amount):

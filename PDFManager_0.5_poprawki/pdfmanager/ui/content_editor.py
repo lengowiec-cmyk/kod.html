@@ -1,4 +1,5 @@
 """Independent text formatting and positioned clipboard insertion."""
+from pdfmanager.i18n.translator import translator
 from dataclasses import replace
 from pathlib import Path
 from PySide6.QtCore import QBuffer, QIODevice
@@ -24,7 +25,7 @@ class TextStyleDialog(QDialog):
         self.color=QColor(*self.span.color_rgb);button=QPushButton('Wybierz kolor');button.clicked.connect(self.choose_color);layout.addRow('Kolor:',button)
         buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel);buttons.accepted.connect(self.accept);buttons.rejected.connect(self.reject);layout.addRow(buttons)
     def pick_font(self):
-        name,_=QFileDialog.getOpenFileName(self,'Czcionka','','Czcionki (*.ttf *.otf)')
+        name,_=QFileDialog.getOpenFileName(self,translator.text('Czcionka'),'','Czcionki (*.ttf *.otf)')
         if name:self.font_file=Path(name)
     def choose_color(self):
         selected=QColorDialog.getColor(self.color,self)

@@ -1,13 +1,15 @@
+from pdfmanager.i18n.translator import translator
 from pathlib import Path
 import tempfile
 from PySide6.QtWidgets import QDialog,QFormLayout,QComboBox,QSpinBox,QCheckBox,QPushButton,QHBoxLayout,QInputDialog,QMessageBox,QFileDialog,QDialogButtonBox
 from pdfmanager.dms.profiles import ScanProfiles
 from .background_job import run_job
+from pdfmanager.i18n.bindings import current_source, select_source
 
 class ScanProfilesDialog(QDialog):
     def __init__(self,window):
-        super().__init__(window);self.window=window;self.store=ScanProfiles();self.setWindowTitle('Profile skanowania i importu');self.resize(630,500);form=QFormLayout(self)
-        self.names=QComboBox();self.names.addItems(self.store.all());form.addRow('Profil:',self.names)
+        super().__init__(window);self.window=window;self.store=ScanProfiles();self.setWindowTitle(translator.text('Profile skanowania i importu'));self.resize(630,500);form=QFormLayout(self)
+        self.names=QComboBox();self.names.setProperty("i18nSkip",True);self.names.addItems(self.store.all());form.addRow('Profil:',self.names)
         self.dpi=QSpinBox();self.dpi.setRange(72,600);form.addRow('Rozdzielczość DPI:',self.dpi)
         self.color=QComboBox();self.color.addItems(['Kolor','Szarość','Czerń i biel']);form.addRow('Kolor:',self.color)
         self.rotation=QComboBox();self.rotation.addItems(['0','90','180','270']);form.addRow('Obrót:',self.rotation)
@@ -22,11 +24,11 @@ class ScanProfilesDialog(QDialog):
         self.names.currentTextChanged.connect(self.load);self.load(self.names.currentText())
     def load(self,name):
         p=self.store.all().get(name)
-        if p:self.dpi.setValue(p['dpi']);self.color.setCurrentText(p['color']);self.rotation.setCurrentText(str(p.get('rotation',0)));self.ocr.setChecked(p['ocr']);self.language.setCurrentText(p['language']);self.blank.setChecked(p.get('omit_blank',False))
-    def profile(self):return {'dpi':self.dpi.value(),'color':self.color.currentText(),'rotation':int(self.rotation.currentText()),'ocr':self.ocr.isChecked(),'language':self.language.currentText(),'omit_blank':self.blank.isChecked()}
+        if p:self.dpi.setValue(p['dpi']);select_source(self.color,p['color']);self.rotation.setCurrentText(str(p.get('rotation',0)));self.ocr.setChecked(p['ocr']);self.language.setCurrentText(p['language']);self.blank.setChecked(p.get('omit_blank',False))
+    def profile(self):return {'dpi':self.dpi.value(),'color':current_source(self.color),'rotation':int(self.rotation.currentText()),'ocr':self.ocr.isChecked(),'language':self.language.currentText(),'omit_blank':self.blank.isChecked()}
     def save(self):self.store.save(self.names.currentText(),self.profile())
     def new(self):
-        name,ok=QInputDialog.getText(self,'Nowy profil','Nazwa:')
+        name,ok=QInputDialog.getText(self,translator.text('Nowy profil'),translator.text('Nazwa:'))
         if ok and name.strip():self.store.save(name,self.profile());self.names.addItem(name);self.names.setCurrentText(name)
     def remove(self):
         try:self.store.remove(self.names.currentText());self.names.removeItem(self.names.currentIndex())

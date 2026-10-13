@@ -18,12 +18,15 @@ dla jakiegoś pakietu (typowe np. dla opcjonalnych backendów `keyring` albo
 wtyczek Qt) — dodaj go do `hiddenimports` poniżej i zbuduj ponownie.
 """
 from pathlib import Path
+from PySide6.QtCore import QLibraryInfo
 
 PROJECT_ROOT = Path(SPECPATH).parent  # packaging/ -> korzeń projektu
 ICON_PATH = PROJECT_ROOT / "packaging" / "pdfmanager.ico"
 
 configuration=PROJECT_ROOT/'pdfmanager/resources/management.json'
 management_data=[(str(configuration),'pdfmanager/resources')] if configuration.is_file() else []
+
+qt_translations = [(str(Path(QLibraryInfo.path(QLibraryInfo.TranslationsPath)) / f"qtbase_{lang}.qm"), "pdfmanager/resources/qt_translations") for lang in ("pl", "uk")]
 
 block_cipher = None
 
@@ -37,7 +40,7 @@ a = Analysis(
         # klucz PRYWATNY (tools/private_key_DO_NOT_SHIP.pem) NIE jest tu
         # wymieniony i nigdy nie powinien trafić do spakowanej wersji.
         (str(PROJECT_ROOT / "pdfmanager" / "licensing" / "public_key.pem"), "pdfmanager/licensing"),
-    ]+management_data,
+    ]+management_data+qt_translations,
     hiddenimports=[
         # keyring wybiera backend dynamicznie (pkgutil/entry_points) — na
         # Windows potrzebujemy mieć WinVaultKeyring dostępny w spakowanej

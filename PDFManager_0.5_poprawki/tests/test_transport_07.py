@@ -160,6 +160,7 @@ def test_empty_transport_order_rejected(tmp_path):
 
 def test_save_next_on_drive_preserves_api_link(qapp,tmp_path):
     from pdfmanager.ui.main_window import MainWindow,DriveTabInfo
+    from pdfmanager.i18n.translator import translator
     win=MainWindow();a=make_pdf(tmp_path/'a.pdf');win.open_document(str(a));client=MagicMock(spec=DriveApiClient)
     first=DriveFile('a','a.pdf','application/pdf','now',100,'a',('folder',));second=DriveFile('b','b.pdf','application/pdf','now',100,'b',('folder',));client.list_folder.return_value=[first,second];win._current_viewer().drive_info=DriveTabInfo('a',first,client)
     with patch.object(win,'_save_working_copy',return_value='durable-job'),patch.object(win,'_open_drive_file') as opening:
@@ -184,11 +185,12 @@ def test_background_queue_updates_confirmed_state(qapp,tmp_path):
     import time
     from PySide6.QtTest import QTest
     from pdfmanager.ui.main_window import MainWindow,DriveTabInfo
+    from pdfmanager.i18n.translator import translator
     from pdfmanager.dms.preferences import Preferences
     source=make_pdf(tmp_path/'a.pdf');outbox=Outbox(tmp_path/'outbox');outbox.enqueue(source,baseline(),'Anna','account')
     client=DriveApiClient(MagicMock());client._team_account_id='account';win=MainWindow();win.open_document(str(source));win._current_viewer().drive_info=DriveTabInfo('id1',baseline(),client);Preferences().put('transport_auto_send',True)
     with patch('pdfmanager.drive.teamwork.Outbox',return_value=outbox),patch('pdfmanager.drive.teamwork.TeamDrive.publish',return_value=baseline('new')):
         win._transport_tick();deadline=time.monotonic()+5
         while win._transport_sending and time.monotonic()<deadline:QTest.qWait(20)
-        assert not win._transport_sending;assert outbox.items()[0]['state']=='Zapisano na Google Drive';assert 'oczekuje 0' in win._drive_queue_status.text()
+        assert not win._transport_sending;assert outbox.items()[0]['state']=='Zapisano na Google Drive';assert win._drive_queue_status.text()==translator.text('Drive: oczekuje {waiting} • konflikty {conflicts}',waiting=0,conflicts=0)
     win.close()

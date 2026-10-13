@@ -1,3 +1,4 @@
+from pdfmanager.i18n.translator import translator
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont,QColor,QTextCharFormat,QTextCursor
 from PySide6.QtWidgets import QDockWidget,QWidget,QVBoxLayout,QLabel,QPushButton,QFormLayout,QDoubleSpinBox,QMessageBox
@@ -15,23 +16,23 @@ class TextProperties(QDockWidget):
         self.setWidget(body);self.setMinimumWidth(300);self.hide()
     def edit_pdf(self):
         self.viewer=self.window._current_viewer()
-        if self.viewer:self.viewer.set_edit_mode(True);self.show();self.message.setText('Kliknij fragment tekstu na stronie. Formatuj szkic paskiem nad dokumentem.')
+        if self.viewer:self.viewer.set_edit_mode(True);self.show();self.message.setText(translator.text('Kliknij fragment tekstu na stronie. Formatuj szkic paskiem nad dokumentem.'))
     def new_text(self):
-        self.viewer=self.window._current_viewer();self.span=None;self.editor.clear();self.show();self.message.setText('Wpisz tekst, ustaw format, kliknij Zastosuj i przeciągnij pole na stronie.')
+        self.viewer=self.window._current_viewer();self.span=None;self.editor.clear();self.show();self.message.setText(translator.text('Wpisz tekst, ustaw format, kliknij Zastosuj i przeciągnij pole na stronie.'))
     def select_span(self,viewer,span):
         self.viewer=viewer;self.span=span;self.editor.setPlainText(span.text)
         f=QTextCharFormat();f.setFontFamilies([span.font_name]);f.setFontPointSize(span.font_size);f.setFontWeight(QFont.Bold if span.bold else QFont.Normal);f.setFontItalic(span.italic);f.setForeground(QColor(*span.color_rgb))
         cursor=self.editor.textCursor();cursor.select(QTextCursor.Document);cursor.setCharFormat(f);cursor.clearSelection();self.editor.setTextCursor(cursor);self.editor.setCurrentCharFormat(f)
-        self.width.setValue(span.bbox[2]-span.bbox[0]+20);self.height.setValue(max(30,span.bbox[3]-span.bbox[1]+8));self.message.setText('Edytujesz wybrany fragment. Oryginał na dysku zmieni się dopiero po zapisaniu dokumentu.');self.show()
+        self.width.setValue(span.bbox[2]-span.bbox[0]+20);self.height.setValue(max(30,span.bbox[3]-span.bbox[1]+8));self.message.setText(translator.text('Edytujesz wybrany fragment. Oryginał na dysku zmieni się dopiero po zapisaniu dokumentu.'));self.show()
     def apply(self):
         viewer=self.window._current_viewer()
         if viewer is None:return
-        if not self.editor.toPlainText().strip():self.message.setText('Najpierw wpisz tekst.');self.show();return
+        if not self.editor.toPlainText().strip():self.message.setText(translator.text('Najpierw wpisz tekst.'));self.show();return
         data=payload(self.editor)
         if self.span is None:
-            viewer.pending_content={'rich':data};viewer.set_active_tool('place_content');self.message.setText('Przeciągnij na stronie prostokąt dla tekstu.');return
-        if viewer is not self.viewer:self.message.setText('Wybierz fragment w bieżącym dokumencie.');return
-        if viewer.current_page!=self.span.page_index:self.message.setText('Wróć do strony edytowanego fragmentu albo wybierz nowy tekst.');return
+            viewer.pending_content={'rich':data};viewer.set_active_tool('place_content');self.message.setText(translator.text('Przeciągnij na stronie prostokąt dla tekstu.'));return
+        if viewer is not self.viewer:self.message.setText(translator.text('Wybierz fragment w bieżącym dokumencie.'));return
+        if viewer.current_page!=self.span.page_index:self.message.setText(translator.text('Wróć do strony edytowanego fragmentu albo wybierz nowy tekst.'));return
         import pymupdf
         from pdfmanager.pdf_engine.rich_text import insert_rich_text
         box=pymupdf.Rect(self.span.bbox)*viewer._doc.rotation_matrix(self.span.page_index);w,h=viewer._doc.page_size_points(self.span.page_index)
@@ -39,5 +40,5 @@ class TextProperties(QDockWidget):
         try:
             result=viewer._mutate_file(lambda:insert_rich_text(viewer.path,self.span.page_index,rect,data,original=self.span.bbox))
             if result.get('fallback_fonts'):self.window.statusBar().showMessage('Użyto czcionki zastępczej dla: '+', '.join(result['fallback_fonts']),10000)
-            self.span=None;self.message.setText('Zmieniono kopię roboczą. Sprawdź układ i kliknij Zapisz. Ponownie zaznacz fragment przed kolejną zmianą.')
-        except Exception as exc:QMessageBox.warning(self.window,'Edycja tekstu',str(exc))
+            self.span=None;self.message.setText(translator.text('Zmieniono kopię roboczą. Sprawdź układ i kliknij Zapisz. Ponownie zaznacz fragment przed kolejną zmianą.'))
+        except Exception as exc:QMessageBox.warning(self.window,translator.text('Edycja tekstu'),str(exc))

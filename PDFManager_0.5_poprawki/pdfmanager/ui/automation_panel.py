@@ -1,3 +1,5 @@
+from pdfmanager.i18n.translator import translator
+from pdfmanager.i18n.bindings import current_source
 from pathlib import Path
 from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QLabel,QTableWidget,QTableWidgetItem,QPushButton,QDialog,QFormLayout,QLineEdit,QComboBox,QCheckBox,QFileDialog,QDialogButtonBox,QMessageBox
 from pdfmanager.dms.automation import Rules,route_documents
@@ -27,13 +29,13 @@ class AutomationPanel(QWidget):
         name=QLineEdit(value.get('name',''));form.addRow('Nazwa:',name);kind=QComboBox();kind.addItems(['Nazwa','Tekst PDF','Kod kreskowy']);kind.setCurrentText(value.get('kind','Tekst PDF'));form.addRow('Warunek:',kind)
         match=QLineEdit(value.get('match',''));form.addRow('Zawiera frazę:',match);target=QLineEdit(value.get('target',''));form.addRow('Folder docelowy:',target)
         def choose():
-            folder=QFileDialog.getExistingDirectory(dialog,'Folder docelowy')
+            folder=QFileDialog.getExistingDirectory(dialog,translator.text('Folder docelowy'))
             if folder:target.setText(folder)
         button=QPushButton('Wybierz folder…');button.clicked.connect(choose);form.addRow(button);enabled=QCheckBox('Reguła aktywna');enabled.setChecked(value.get('enabled',True));form.addRow(enabled)
         buttons=QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel);buttons.rejected.connect(dialog.reject);form.addRow(buttons)
         def save():
-            try:self.rules.save({'name':name.text(),'kind':kind.currentText(),'match':match.text(),'target':target.text(),'enabled':enabled.isChecked()},index);dialog.accept()
-            except Exception as exc:QMessageBox.warning(dialog,'Reguła',str(exc))
+            try:self.rules.save({'name':name.text(),'kind':current_source(kind),'match':match.text(),'target':target.text(),'enabled':enabled.isChecked()},index);dialog.accept()
+            except Exception as exc:QMessageBox.warning(dialog,translator.text('Reguła'),str(exc))
         buttons.accepted.connect(save);dialog.exec();self.refresh()
     def remove(self):
         index=self.table.currentRow()

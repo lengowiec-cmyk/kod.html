@@ -1,3 +1,4 @@
+from pdfmanager.i18n.translator import translator
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from PySide6.QtCore import QTimer,QProcess
@@ -42,7 +43,7 @@ class ScanAutomation:
                 from pdfmanager.dms.automation import Rules
                 if not Rules().all():raise ValueError('Utwórz przynajmniej jedną regułę w zakładce Automatyzacja.')
             self.config=config;self.prefs.put('scan_config',config);self.stable=StableFiles();self.failed_stamps.clear()
-        except Exception as exc:QMessageBox.warning(self.window,'Import skanów',str(exc))
+        except Exception as exc:QMessageBox.warning(self.window,translator.text('Import skanów'),str(exc))
     def toggle(self):
         if self.timer.isActive():self.timer.stop();self.window.statusBar().showMessage('Obserwowanie folderu skanera wyłączone.',4000);return
         if not self.config:self.configure()

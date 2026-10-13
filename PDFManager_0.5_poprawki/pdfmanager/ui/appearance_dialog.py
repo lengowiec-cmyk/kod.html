@@ -1,4 +1,5 @@
 """Persistent, original appearance options for the document workspace."""
+from pdfmanager.i18n.translator import translator
 from PySide6.QtWidgets import QDialog,QFormLayout,QComboBox,QCheckBox,QDialogButtonBox,QApplication
 from pdfmanager.app_settings import settings
 from pdfmanager.ui.theme import apply_theme
@@ -6,7 +7,7 @@ from pdfmanager.ui.theme import apply_theme
 
 class AppearanceDialog(QDialog):
     def __init__(self,parent):
-        super().__init__(parent);self.window=parent;self.setWindowTitle('Wygląd');form=QFormLayout(self)
+        super().__init__(parent);self.window=parent;self.setWindowTitle(translator.text('Wygląd'));form=QFormLayout(self)
         self.theme=QComboBox();self.theme.addItem('Jasny','light');self.theme.addItem('Ciemny','dark');self.theme.setCurrentIndex(max(0,self.theme.findData(settings.theme)));form.addRow('Motyw:',self.theme)
         self.title=QComboBox()
         for label,color in [('Niebieski','#2d5997'),('Grafit','#374151'),('Zielony','#2c735c'),('Fioletowy','#67529a'),('Morski','#226d80'),('Bordowy','#8c4051')]:self.title.addItem(label,color)

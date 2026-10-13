@@ -29,10 +29,25 @@ class Translator(QObject):
         super().__init__()
         self._strings: dict[str, dict[str, str]] = {}
         self._language = DEFAULT_LANGUAGE
+        self._ui_strings = {}
+        self._sources = {}
         for lang in SUPPORTED_LANGUAGES:
             path = LOCALES_DIR / f"{lang}.json"
             with path.open("r", encoding="utf-8") as fh:
                 self._strings[lang] = json.load(fh)
+            self._ui_strings[lang] = json.loads((LOCALES_DIR / f"ui_{lang}.json").read_text(encoding="utf-8"))
+        for lang in SUPPORTED_LANGUAGES:
+            for source, value in self._ui_strings[lang].items():
+                self._sources.setdefault(value, source)
+
+    def source(self, value: str) -> str | None:
+        if value in self._ui_strings["pl"]:
+            return value
+        return self._sources.get(value)
+
+    def text(self, source: str, **kwargs: object) -> str:
+        value = self._ui_strings[self._language].get(source, source)
+        return value.format(**kwargs) if kwargs else value
 
     @property
     def language(self) -> str:

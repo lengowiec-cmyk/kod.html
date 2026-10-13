@@ -2,6 +2,7 @@
 from PySide6.QtCore import Qt,QSize
 from PySide6.QtWidgets import QWidget,QHBoxLayout,QVBoxLayout,QLabel,QToolButton,QTabBar,QStackedWidget,QMenuBar,QFrame,QScrollArea
 from .vector_icons import vector_icon
+from pdfmanager.i18n.translator import translator
 
 class TitleBar(QWidget):
     def __init__(self,window):
@@ -11,7 +12,7 @@ class TitleBar(QWidget):
         self.title=QLabel('PDFManager • Centrum dokumentów');row.addWidget(self.title);row.addStretch()
         for text,tip,callback in [('—','Minimalizuj',window.showMinimized),('□','Maksymalizuj / przywróć',self.toggle_maximize),('×','Zamknij',window.close)]:
             button=QToolButton();button.setText(text);button.setToolTip(tip);button.setFixedSize(46,34);button.clicked.connect(callback);row.addWidget(button)
-        window.windowTitleChanged.connect(lambda title:self.title.setText('PDFManager • Centrum dokumentów'))
+        window.windowTitleChanged.connect(lambda title:self.title.setText(translator.text('PDFManager • Centrum dokumentów')))
     def toggle_maximize(self):self.window.showNormal() if self.window.isMaximized() else self.window.showMaximized()
     def mousePressEvent(self,event):
         if event.button()==Qt.LeftButton and self.window.windowHandle():self.window.windowHandle().startSystemMove()

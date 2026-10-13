@@ -1,3 +1,4 @@
+from pdfmanager.i18n.translator import translator
 from pathlib import Path
 from PySide6.QtWidgets import QInputDialog,QFileDialog,QMessageBox,QDialog,QVBoxLayout,QListWidget,QPushButton,QDialogButtonBox
 from pdfmanager.dms.cabinets import CabinetStore
@@ -16,7 +17,7 @@ class CabinetTools:
     def select(self):
         entries=self.store.read()
         if not entries:self.add();return
-        name,ok=QInputDialog.getItem(self.window,'Szafki','Wybierz szafkę:',[e['name'] for e in entries],0,False)
+        name,ok=QInputDialog.getItem(self.window,translator.text('Szafki'),'Wybierz szafkę:',[e['name'] for e in entries],0,False)
         if ok:
             entry=next(e for e in entries if e['name']==name)
             if not Path(entry['root']).is_dir():self.error('Folder szafki jest niedostępny.');return
@@ -94,7 +95,7 @@ class CabinetTools:
             name,_=QFileDialog.getSaveFileName(self.window,'Oryginalna nazwa jest zajęta — wybierz nową',str(source))
             if not name:return
             target=Path(name)
-        try:trash.restore(folder,target);QMessageBox.information(self.window,'Kosz','Przywrócono plik.')
+        try:trash.restore(folder,target);QMessageBox.information(self.window,translator.text('Kosz'),'Przywrócono plik.')
         except Exception as exc:self.error(exc)
     def favorite(self):
         if not self.active:self.select()
@@ -105,7 +106,7 @@ class CabinetTools:
         from pdfmanager.dms.preferences import Preferences
         entries=Preferences().get('favorites',[])
         if not entries:self.error('Dodaj szafkę do ulubionych.');return
-        label,ok=QInputDialog.getItem(self.window,'Ulubione szafki','Szafka:',[e['name'] for e in entries],0,False)
+        label,ok=QInputDialog.getItem(self.window,translator.text('Ulubione szafki'),'Szafka:',[e['name'] for e in entries],0,False)
         if ok:
             entry=next(e for e in entries if e['name']==label)
             if not Path(entry['root']).is_dir():self.error('Folder jest niedostępny.');return

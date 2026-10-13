@@ -1,13 +1,15 @@
+from pdfmanager.i18n.translator import translator
 from PySide6.QtCore import Qt,QSize
 from PySide6.QtWidgets import QDialog,QHBoxLayout,QVBoxLayout,QListWidget,QStackedWidget,QWidget,QFormLayout,QComboBox,QCheckBox,QSpinBox,QLineEdit,QDialogButtonBox,QLabel,QPushButton,QFileDialog
 from pdfmanager.dms.preferences import Preferences
 from pdfmanager.app_settings import settings
 from .theme import apply_theme
+from pdfmanager.i18n.bindings import current_source
 
 class SettingsCenter(QDialog):
     def __init__(self,window):
-        super().__init__(window);self.window=window;self.prefs=Preferences();self.setWindowTitle('Ustawienia PDFManager');self.resize(970,690)
-        layout=QVBoxLayout(self);row=QHBoxLayout();self.navigation=QListWidget();self.navigation.setFixedWidth(220);self.pages=QStackedWidget();row.addWidget(self.navigation);row.addWidget(self.pages,1);layout.addLayout(row);self.fields={}
+        super().__init__(window);self.window=window;self.prefs=Preferences();self.setWindowTitle(translator.text('Ustawienia PDFManager'));self.resize(970,690)
+        layout=QVBoxLayout(self);row=QHBoxLayout();self.navigation=QListWidget();self.navigation.setProperty("i18nItems",True);self.navigation.setFixedWidth(220);self.pages=QStackedWidget();row.addWidget(self.navigation);row.addWidget(self.pages,1);layout.addLayout(row);self.fields={}
         def page(name):
             self.navigation.addItem(name);widget=QWidget();form=QFormLayout(widget);form.setContentsMargins(22,16,22,16);form.setVerticalSpacing(14);title=QLabel(name);title.setObjectName('PageTitle');form.addRow(title);self.pages.addWidget(widget);return form
         def choice(form,key,label,options,default):
@@ -43,11 +45,11 @@ class SettingsCenter(QDialog):
         migrate=QPushButton('Zaszyfruj starsze lokalne kopie…');migrate.clicked.connect(self.migrate_storage);security.addRow(migrate)
         security.addRow(QLabel('Procesy mają limit czasu i pamięci. Nie jest to pełny AppContainer ani program antywirusowy.'))
         self.navigation.currentRowChanged.connect(self.pages.setCurrentIndex);self.navigation.setCurrentRow(0)
-        buttons=QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel);buttons.button(QDialogButtonBox.Save).setText('Zapisz ustawienia');buttons.button(QDialogButtonBox.Cancel).setText('Anuluj');buttons.accepted.connect(self.save);buttons.rejected.connect(self.reject);layout.addWidget(buttons)
+        buttons=QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel);buttons.button(QDialogButtonBox.Save).setProperty('i18nText','Zapisz ustawienia');buttons.button(QDialogButtonBox.Save).setText(translator.text('Zapisz ustawienia'));buttons.button(QDialogButtonBox.Cancel).setText(translator.text('Anuluj'));buttons.accepted.connect(self.save);buttons.rejected.connect(self.reject);layout.addWidget(buttons)
     def save(self):
         from PySide6.QtWidgets import QApplication
         for key,widget in self.fields.items():
-            value=widget.isChecked() if isinstance(widget,QCheckBox) else widget.value() if isinstance(widget,QSpinBox) else widget.currentText();self.prefs.put(key,value)
+            value=widget.isChecked() if isinstance(widget,QCheckBox) else widget.value() if isinstance(widget,QSpinBox) else current_source(widget);self.prefs.put(key,value)
         settings.theme='dark' if self.theme.currentIndex() else 'light';settings.compact_toolbar=self.fields['compact_ribbon'].isChecked();settings.title_color=['#234c70','#1d6877','#374857','#296853'][self.accent.currentIndex()]
         apply_theme(QApplication.instance(),settings.theme);self.window._shell.ribbon.setFixedHeight(78 if settings.compact_toolbar else 103)
         for button in self.window._shell.ribbon.findChildren(__import__('PySide6.QtWidgets',fromlist=['QToolButton']).QToolButton):button.setFixedHeight(46 if settings.compact_toolbar else 65);button.setIconSize(QSize(23,23) if settings.compact_toolbar else QSize(31,31))

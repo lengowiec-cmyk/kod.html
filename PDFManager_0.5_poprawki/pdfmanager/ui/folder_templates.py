@@ -1,3 +1,4 @@
+from pdfmanager.i18n.translator import translator
 from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog,QHBoxLayout,QVBoxLayout,QListWidget,QTreeWidget,QTreeWidgetItem,QPushButton,QInputDialog,QMessageBox,QLabel,QDialogButtonBox
@@ -5,7 +6,7 @@ from pdfmanager.dms.cabinets import CabinetStore,validate_relative
 
 class FolderTemplatesDialog(QDialog):
     def __init__(self,parent,root=None):
-        super().__init__(parent);self.setWindowTitle('Biblioteka struktur folderów');self.resize(850,590);self.store=CabinetStore();self.root=Path(root) if root else None
+        super().__init__(parent);self.setWindowTitle(translator.text('Biblioteka struktur folderów'));self.resize(850,590);self.store=CabinetStore();self.root=Path(root) if root else None
         layout=QVBoxLayout(self);layout.addWidget(QLabel('Powtarzalne struktury dla klientów, projektów i spraw'))
         actions=QHBoxLayout()
         for label,callback in [('Dodaj',lambda:self.edit()),('Edytuj',self.edit_selected),('Usuń',self.remove)]:
@@ -35,7 +36,7 @@ class FolderTemplatesDialog(QDialog):
         if self.list.currentItem():self.edit(self.list.currentItem().text())
     def edit(self,name=None):
         if not name:
-            name,ok=QInputDialog.getText(self,'Nowy szablon','Nazwa:')
+            name,ok=QInputDialog.getText(self,'Nowy szablon',translator.text('Nazwa:'))
             if not ok:return
         text,ok=QInputDialog.getMultiLineText(self,'Struktura folderów','Jeden folder na linię; podfoldery oddzielaj /:', '\n'.join(self.store.templates().get(name,[])))
         if not ok:return
@@ -49,7 +50,7 @@ class FolderTemplatesDialog(QDialog):
     def apply(self):
         item=self.list.currentItem()
         if not item:return
-        name,ok=QInputDialog.getText(self,'Nowy klient','Nazwa nowego folderu klienta:')
+        name,ok=QInputDialog.getText(self,translator.text('Nowy klient'),'Nazwa nowego folderu klienta:')
         if not ok:return
         try:
             path=self.store.create_client(self.root,name,item.text());QMessageBox.information(self,'Struktura utworzona',str(path))

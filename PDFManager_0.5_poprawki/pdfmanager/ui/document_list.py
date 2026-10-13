@@ -89,7 +89,7 @@ class DocumentListView(QTreeView):
     def _transfer(self,move):
         paths=self.selected_paths()
         if not paths:return
-        folder=QFileDialog.getExistingDirectory(self,'Folder docelowy')
+        folder=QFileDialog.getExistingDirectory(self,translator.text('Folder docelowy'))
         if not folder:return
         from pathlib import Path
         from pdfmanager.dms.files import transfer_file
@@ -118,4 +118,4 @@ class DocumentListView(QTreeView):
                 if self.is_open_document(path):raise ValueError('Zamknij kartę dokumentu przed przeniesieniem do kosza.')
                 Trash().put(path)
             except Exception as exc:errors.append(f'{path.name}: {exc}')
-        if errors:QMessageBox.warning(self,'Kosz','\n'.join(errors))
+        if errors:QMessageBox.warning(self,translator.text('Kosz'),'\n'.join(errors))

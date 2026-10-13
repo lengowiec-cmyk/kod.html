@@ -1,4 +1,5 @@
 """Complete transport workspace with real actions, editable templates and Drive outbox."""
+from pdfmanager.i18n.translator import translator
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from PySide6.QtCore import Qt, QTimer
@@ -19,7 +20,7 @@ def field(form,label,widget):form.addRow(label,widget);return widget
 
 class TransportCenter(QDialog):
     def __init__(self,window):
-        super().__init__(window);self.window=window;self.setWindowTitle('PDFManager — centrum spedycji');self.resize(1080,780)
+        super().__init__(window);self.window=window;self.setWindowTitle(translator.text('PDFManager — centrum spedycji'));self.resize(1080,780)
         self.setStyleSheet("""
             QDialog { background: #f2f6fa; }
             QLabel { color: #334155; }
@@ -42,7 +43,7 @@ class TransportCenter(QDialog):
         button(root,'Zamknij',self.accept)
     def page(self,name):
         w=QWidget();layout=QVBoxLayout(w);scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setFrameShape(QScrollArea.NoFrame);scroll.setWidget(w);self.tabs.addTab(scroll,name);return layout
-    def error(self,error):QMessageBox.warning(self,'Centrum spedycji',str(error))
+    def error(self,error):QMessageBox.warning(self,translator.text('Centrum spedycji'),str(error))
     def viewer(self):
         v=self.window._current_viewer()
         if not v or not v.is_loaded:raise ValueError('Najpierw otwórz dokument PDF.')
@@ -51,9 +52,9 @@ class TransportCenter(QDialog):
         layout=self.page('Stemple i teksty');form=QFormLayout();layout.addLayout(form)
         self.employee=field(form,'Pracownik:',QLineEdit(Preferences().get('transport_employee','')))
         self.order=field(form,'Numer zlecenia:',QLineEdit());self.contractor=field(form,'Kontrahent:',QLineEdit())
-        self.profile=field(form,'Profil dokumentu:',QComboBox());self.profile.addItems(self.data['profiles']);self.profile.currentTextChanged.connect(self.load_profile)
+        self.profile=field(form,'Profil dokumentu:',QComboBox());self.profile.setProperty('i18nSkip',True);self.profile.addItems(self.data['profiles']);self.profile.currentTextChanged.connect(self.load_profile)
         self.kind=field(form,'Biblioteka:',QComboBox());self.kind.addItems(['Stemple','Bloki tekstu'])
-        self.entry=field(form,'Wzór:',QComboBox());self.kind.currentIndexChanged.connect(self.refresh_entries);self.entry.currentTextChanged.connect(self.load_entry)
+        self.entry=field(form,'Wzór:',QComboBox());self.entry.setProperty('i18nSkip',True);self.kind.currentIndexChanged.connect(self.refresh_entries);self.entry.currentTextChanged.connect(self.load_entry)
         self.text=QTextEdit();layout.addWidget(self.text)
         layout.addWidget(QLabel('Pola automatyczne: {data}, {godzina}, {pracownik}, {zlecenie}, {kontrahent}.'))
         row=QHBoxLayout();layout.addLayout(row)
@@ -91,7 +92,7 @@ class TransportCenter(QDialog):
     def save_profile(self):
         self.data['profiles'][self.profile.currentText()]=self.options();self.library.save(self.data)
     def new_profile(self):
-        name,ok=QInputDialog.getText(self,'Profil','Nazwa:')
+        name,ok=QInputDialog.getText(self,'Profil',translator.text('Nazwa:'))
         if ok and name.strip():self.data['profiles'][name.strip()]=self.options();self.library.save(self.data);self.profile.addItem(name.strip());self.profile.setCurrentText(name.strip())
     def refresh_entries(self):
         self.entry.clear();self.entry.addItems(self.data['stamps'] if self.kind.currentIndex()==0 else self.data['snippets'])
@@ -106,7 +107,7 @@ class TransportCenter(QDialog):
         else:self.data['snippets'][name or value[:40]]=value
         self.library.save(self.data);self.refresh_entries()
     def add_entry(self):
-        name,ok=QInputDialog.getText(self,'Nowy wzór','Nazwa / tekst stempla:')
+        name,ok=QInputDialog.getText(self,translator.text('Nowy wzór'),'Nazwa / tekst stempla:')
         if ok and name.strip():
             if self.kind.currentIndex()==0:self.data['stamps'].append(name.strip())
             else:self.data['snippets'][name.strip()]=name.strip()
@@ -142,7 +143,7 @@ class TransportCenter(QDialog):
             row=QHBoxLayout();layout.addLayout(row);box=QCheckBox(name+' — sprawdzono');self.checks[name]=box;row.addWidget(box);button(row,'Dołącz dokument',lambda checked=False,n=name:self.attach_order(n))
         button(layout,'Zapisz listę kontrolną',self.save_order);self.missing=QLabel('');layout.addWidget(self.missing)
         button(layout,'Sprawdź braki we wszystkich teczkach',self.check_orders)
-        self.naming=QComboBox();self.naming.addItems(['CMR','POD','Zlecenie','Faktura']);form.addRow('Typ dokumentu do nazwy:',self.naming)
+        self.naming=QComboBox();self.naming.setProperty("i18nSkip",True);self.naming.addItems(['CMR','POD','Zlecenie','Faktura']);form.addRow('Typ dokumentu do nazwy:',self.naming)
         button(layout,'Podpowiedz dane z tekstu / OCR',self.suggest_data);button(layout,'Zapisz bieżący PDF z automatyczną nazwą',self.named_copy);layout.addStretch()
     def choose_directory(self,edit):
         value=QFileDialog.getExistingDirectory(self,'Katalog',edit.text())
@@ -156,7 +157,7 @@ class TransportCenter(QDialog):
     def recent_folder(self):
         items=Preferences().get('recent',[])
         if not items:return
-        path,ok=QInputDialog.getItem(self,'Ostatnie foldery','Wybierz:',items,0,False)
+        path,ok=QInputDialog.getItem(self,translator.text('Ostatnie foldery'),'Wybierz:',items,0,False)
         if ok:self.order_root.setText(path)
     def load_order(self):
         try:
@@ -379,5 +380,5 @@ class TransportCenter(QDialog):
     def open_recent(self):
         paths=Preferences().get('recent',[])
         if not paths:return
-        path,ok=QInputDialog.getItem(self,'Ostatnie foldery','Folder:',paths,0,False)
+        path,ok=QInputDialog.getItem(self,translator.text('Ostatnie foldery'),translator.text('Folder:'),paths,0,False)
         if ok:self.window._on_folder_selected(path);self.accept()

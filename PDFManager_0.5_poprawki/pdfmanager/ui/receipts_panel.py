@@ -1,3 +1,4 @@
+from pdfmanager.i18n.translator import translator
 from pathlib import Path
 from PySide6.QtCore import Signal,Qt,QDate
 from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QTableWidget,QTableWidgetItem,QLabel,QDialog,QFormLayout,QLineEdit,QDateEdit,QComboBox,QCheckBox,QFileDialog,QDialogButtonBox,QMessageBox,QSplitter
@@ -13,15 +14,15 @@ class ReceiptsPanel(QWidget):
             button=QPushButton(label);button.clicked.connect(callback);row.addWidget(button)
         row.addStretch();layout.addLayout(row)
         self.table=QTableWidget(0,7);self.table.setHorizontalHeaderLabels(['Data','Sprzedawca','Kwota','Waluta','Kategoria','Płatność','Do zwrotu']);self.table.setSelectionBehavior(QTableWidget.SelectRows);self.table.setEditTriggers(QTableWidget.NoEditTriggers);self.table.doubleClicked.connect(lambda:self.edit_selected());layout.addWidget(self.table)
-        self.total=QLabel();layout.addWidget(self.total);self.refresh()
+        translator.language_changed.connect(lambda _:self.refresh());self.total=QLabel();layout.addWidget(self.total);self.refresh()
     def refresh(self):
         from decimal import Decimal
         rows=self.store.all();self.table.setRowCount(len(rows));totals={}
         for row,(identifier,data) in enumerate(rows):
             for column,key in enumerate(('date','payee','amount','currency','category','payment','reimbursable')):
-                value=data.get(key,'');item=QTableWidgetItem(('Tak' if value else 'Nie') if key=='reimbursable' else str(value));item.setData(Qt.UserRole,identifier);self.table.setItem(row,column,item)
+                value=data.get(key,'');item=QTableWidgetItem(translator.text('Tak' if value else 'Nie') if key=='reimbursable' else str(value));item.setData(Qt.UserRole,identifier);self.table.setItem(row,column,item)
             currency=data.get('currency','PLN');totals[currency]=totals.get(currency,Decimal(0))+Decimal(data['amount'])
-        self.total.setText('Suma: '+ ' • '.join(f'{v:.2f} {k}' for k,v in totals.items()));self.table.resizeColumnsToContents()
+        self.total.setText(translator.text('Suma: ')+ ' • '.join(f'{v:.2f} {k}' for k,v in totals.items()));self.table.resizeColumnsToContents()
     def selected(self):
         row=self.table.currentRow()
         if row<0:return None
@@ -49,7 +50,7 @@ class ReceiptsPanel(QWidget):
                 if not viewer.is_loaded:
                     error=viewer.load_error;viewer.close();viewer.deleteLater();raise ValueError(error or 'Nie można wyświetlić dokumentu.')
                 pv.addWidget(viewer);viewers.append(viewer);empty.hide();viewer.fit_width()
-            except Exception as exc:QMessageBox.warning(dialog,'Podgląd',str(exc))
+            except Exception as exc:QMessageBox.warning(dialog,translator.text('Podgląd'),str(exc))
         def choose():
             path,_=QFileDialog.getOpenFileName(dialog,'Dokument paragonu','','PDF (*.pdf)')
             if path:document.setText(path);load(path)

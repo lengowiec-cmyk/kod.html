@@ -1,3 +1,4 @@
+from pdfmanager.i18n.translator import translator
 from pathlib import Path
 from PySide6.QtCore import Signal,Qt
 from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QComboBox,QFileDialog,QSplitter,QMessageBox
@@ -33,7 +34,7 @@ class InboxPanel(QWidget):
         heading=QLabel('Skrzynka dokumentów');heading.setObjectName('PageTitle');layout.addWidget(heading)
         controls=QHBoxLayout();choose=QPushButton('Folder przychodzący');choose.clicked.connect(self.choose);controls.addWidget(choose)
         self.source_label=QLabel('Wybierz folder skanów lub dokumentów przychodzących.');controls.addWidget(self.source_label,1)
-        self.cabinets=QComboBox();self.cabinets.currentIndexChanged.connect(self.destination);controls.addWidget(self.cabinets)
+        self.cabinets=QComboBox();self.cabinets.setProperty("i18nSkip",True);self.cabinets.currentIndexChanged.connect(self.destination);controls.addWidget(self.cabinets)
         target=QPushButton('Folder docelowy…');target.clicked.connect(self.choose_target);controls.addWidget(target)
         copy=QPushButton('Kopiuj zaznaczone →');copy.clicked.connect(self.copy);controls.addWidget(copy);layout.addLayout(controls)
         split=QSplitter();self.incoming=DocumentListView();self.incoming.setDragEnabled(True);self.outgoing=DropDocuments()
@@ -48,13 +49,13 @@ class InboxPanel(QWidget):
         self.cabinets.blockSignals(False);self.destination()
     def set_source(self,folder):self.source=folder;self.source_label.setText(folder);self.incoming.show_folder(folder);Preferences().put('inbox_folder',folder)
     def choose(self):
-        folder=QFileDialog.getExistingDirectory(self,'Folder przychodzący',self.source)
+        folder=QFileDialog.getExistingDirectory(self,translator.text('Folder przychodzący'),self.source)
         if folder:self.set_source(folder)
     def destination(self,*args):
         folder=self.cabinets.currentData()
         if folder:self.outgoing.target=folder;self.outgoing.show_folder(folder)
     def choose_target(self):
-        folder=QFileDialog.getExistingDirectory(self,'Folder docelowy')
+        folder=QFileDialog.getExistingDirectory(self,translator.text('Folder docelowy'))
         if folder:self.outgoing.target=folder;self.outgoing.show_folder(folder)
     def copy(self):
         if not self.outgoing.target:return

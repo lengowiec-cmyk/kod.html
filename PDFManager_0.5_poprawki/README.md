@@ -1,3 +1,12 @@
+# PDFManager 0.11 — poprawiona zmiana języka
+
+Menu, osiem zakładek, wstążka, pasek czcionek i ustawienia zmieniają język
+od razu. Nazwy dokumentów, profili i wpisany tekst pozostają zachowane.
+
+- [Instrukcja zmiany języka i budowania nowego EXE](README_0.11.md)
+- [Wyniki testów](TEST_RESULTS_0.11.txt)
+- [Pełny projekt 0.11 w ZIP](../downloads/PDFManager_0.11_pelny_projekt.zip)
+
 # PDFManager 0.10 — formatowanie tekstu i poprawki responsywności
 
 Dodatkowy pasek czcionek, rozmiarów i akapitów w Edytorze PDF.

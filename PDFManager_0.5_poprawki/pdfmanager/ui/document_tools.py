@@ -1,4 +1,5 @@
 """Dialogs connecting advanced document workflows to the existing viewer."""
+from pdfmanager.i18n.translator import translator
 from pathlib import Path
 import json
 import pymupdf
@@ -74,11 +75,11 @@ class DocumentTools:
         try:
             values=tuple(float(s) for s in margins.split(','))
             if len(values)!=4:raise ValueError
-        except ValueError:QMessageBox.warning(self.window,'Przytnij','Wpisz cztery liczby.');return
+        except ValueError:QMessageBox.warning(self.window,translator.text('Przytnij'),'Wpisz cztery liczby.');return
         expression=self.text('Przytnij','Strony, np. 1-3,5 lub *','*')
         if expression is None:return
         try:indices=ops.parse_pages(expression,viewer.page_count)
-        except Exception as exc:QMessageBox.warning(self.window,'Przytnij',str(exc));return
+        except Exception as exc:QMessageBox.warning(self.window,translator.text('Przytnij'),str(exc));return
         self.export('Przytnij',lambda src,out:ops.crop_document(src,out,indices,values))
     def resize(self):
         value=self.text('Rozmiar strony','Szerokość,wysokość w punktach (A4: 595,842)','595,842')
@@ -98,14 +99,14 @@ class DocumentTools:
             try:
                 value=tuple(map(float,raw.split(',')))
                 if len(value)!=3:raise ValueError
-            except ValueError:QMessageBox.warning(self.window,'Poziomy','Wpisz trzy liczby.');return
+            except ValueError:QMessageBox.warning(self.window,translator.text('Poziomy'),'Wpisz trzy liczby.');return
         elif operation=='perspective':
             raw=self.text('Perspektywa','Narożniki jako proporcje obrazu 0–1: LG;PG;PD;LD','0,0;1,0;1,1;0,1')
             if raw is None:return
             try:
                 points=[tuple(map(float,p.split(','))) for p in raw.split(';')]
                 if len(points)!=4 or any(len(p)!=2 or any(v<0 or v>1 for v in p) for p in points):raise ValueError
-            except ValueError:QMessageBox.warning(self.window,'Perspektywa','Nieprawidłowe narożniki.');return
+            except ValueError:QMessageBox.warning(self.window,translator.text('Perspektywa'),'Nieprawidłowe narożniki.');return
             # Normalize independently for each rendered page, including varying page dimensions.
             self.export('Perspektywa',lambda src,out:ops.transform_pdf(src,out,'perspective_normalized',points));return
         self.export('Przekształcenie skanu',lambda src,out:ops.transform_pdf(src,out,operation,value))
@@ -118,8 +119,8 @@ class DocumentTools:
         viewer=self.viewer()
         if not viewer:return
         try:fields=ops.form_fields(viewer.path)
-        except Exception as exc:QMessageBox.warning(self.window,'Formularz',str(exc));return
-        if not fields:QMessageBox.information(self.window,'Formularz','Brak pól formularza.');return
+        except Exception as exc:QMessageBox.warning(self.window,translator.text('Formularz'),str(exc));return
+        if not fields:QMessageBox.information(self.window,translator.text('Formularz'),'Brak pól formularza.');return
         dialog=QDialog(self.window);dialog.setWindowTitle('Wypełnij formularz');dialog.resize(600,450)
         layout=QVBoxLayout(dialog);scroll=QScrollArea(dialog);scroll.setWidgetResizable(True)
         container=QWidget();form=QFormLayout(container);controls={};radio_groups={}
@@ -136,7 +137,7 @@ class DocumentTools:
             else:
                 control=QLineEdit(str(field.value or ''))
                 if field.kind==pymupdf.PDF_WIDGET_TYPE_TEXT:control.setMaxLength(10000)
-            form.addRow(f'{field.name} (strona {field.page+1})',control);controls[field.xref]=(field,control)
+            control.setProperty('i18nSkip',True);form.addRow(f'{field.name} (strona {field.page+1})',control);form.labelForField(control).setProperty('i18nSkip',True);controls[field.xref]=(field,control)
         scroll.setWidget(container);layout.addWidget(scroll)
         buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);layout.addWidget(buttons)
@@ -151,10 +152,10 @@ class DocumentTools:
         viewer=self.viewer()
         if not viewer:return
         try:toc=ops.bookmarks(viewer.path)
-        except Exception as exc:QMessageBox.warning(self.window,'Zakładki',str(exc));return
+        except Exception as exc:QMessageBox.warning(self.window,translator.text('Zakładki'),str(exc));return
         labels=[f'{"  "*(level-1)}{title} — {page}' for level,title,page in toc]
         choices=['Dodaj zakładkę',*labels]
-        choice,ok=QInputDialog.getItem(self.window,'Zakładki','Przejdź do zakładki lub dodaj:',choices,0,False)
+        choice,ok=QInputDialog.getItem(self.window,translator.text('Zakładki'),'Przejdź do zakładki lub dodaj:',choices,0,False)
         if not ok:return
         if choice!='Dodaj zakładkę':viewer.go_to_page(toc[labels.index(choice)][2]-1);return
         title=self.text('Zakładka','Nazwa:')
@@ -170,7 +171,7 @@ class DocumentTools:
             self.window.open_document(other);self.window._toggle_compare_pane()
         run_job(self.window,'Porównanie PDF',lambda:ops.compare_documents(viewer.path,Path(other)),complete)
     def attach(self):
-        file,_=QFileDialog.getOpenFileName(self.window,'Dodaj załącznik')
+        file,_=QFileDialog.getOpenFileName(self.window,translator.text('Dodaj załącznik'))
         if file:self.export('Dodaj załącznik',lambda src,out:ops.add_attachment(src,out,Path(file)))
     def extract_attachment(self):
         viewer=self.viewer()
@@ -180,7 +181,7 @@ class DocumentTools:
         if not names:QMessageBox.information(self.window,'Załączniki','Brak załączników.');return
         name,ok=QInputDialog.getItem(self.window,'Załączniki','Wybierz:',names,0,False)
         if not ok:return
-        output,_=QFileDialog.getSaveFileName(self.window,'Zapisz załącznik',Path(name).name)
+        output,_=QFileDialog.getSaveFileName(self.window,translator.text('Zapisz załącznik'),Path(name).name)
         if output:run_job(self.window,'Załącznik',lambda:ops.extract_attachment(viewer.path,name,Path(output)))
     def sign(self):
         cert,_=QFileDialog.getOpenFileName(self.window,'Certyfikat podpisu','','PKCS#12 (*.pfx *.p12)')

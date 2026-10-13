@@ -1,0 +1,41 @@
+PDFManager 0.11 — weryfikacja w Linux, Python 3.12, PySide6 6.12.0
+
+Pełny końcowy zestaw:
+QT_QPA_PLATFORM=offscreen XDG_CACHE_HOME=/tmp/pdfmanager-cache
+XDG_CONFIG_HOME=/tmp/pdm11-full2-config XDG_DATA_HOME=/tmp/pdm11-full2-data
+python -m pytest -q -o faulthandler_timeout=45
+398 passed, 1 xfailed in 445.81s (0:07:25).
+Oczekiwany błąd OCR: wielka litera Ź bywa rozpoznawana jako Ż.
+Podczas testu zmiany motywu na wielu widżetach pozostałych po wcześniejszych
+przypadkach faulthandler wypisał diagnostyczny stos po 45 s. Test zakończył się
+pomyślnie; nie został wyłączony ani pominięty.
+
+Podzbiór po poprawkach:
+python -m pytest tests/test_ui_language_011.py tests/test_word_010.py
+  tests/test_transport_07.py tests/test_i18n.py -q -o faulthandler_timeout=45
+50 passed in 26.51s. To podzbiór pełnego zestawu, nie dodatkowe 50 testów.
+
+Sprawdzono wielokrotną zmianę PL -> EN -> UK -> PL w działającym oknie:
+- wszystkie osiem zakładek i zachowanie wybranej zakładki;
+- powrót wszystkich QAction do oryginalnych polskich podpisów;
+- zgodność przycisków wstążki z ich QAction.iconText();
+- przyciski i podpowiedzi paska Word, listę stylów, kolejkę Drive;
+- ustawienia otwarte po zmianie języka oraz zmianę w otwartym oknie;
+- własny podpis przycisku zapisu, także po zdarzeniach Qt LanguageChange;
+- zachowanie surowych identyfikatorów widoków i nazw zapisanych opcji;
+- zachowanie treści szkicu, nazw dokumentów, czcionek, rozmiarów,
+  profili, wzorów, nazw wykorzystywanych do plików i danych tabel;
+- zachowanie domyślnego Qt.UserRole przy tłumaczeniu listy opcji;
+- równą liczbę kluczy (581) i zgodność parametrów we wszystkich katalogach;
+- rzeczywiste przetwarzanie PDF oraz wynik zapisanej kolejki Drive.
+
+Zrzuty previews_0.11 pochodzą z działającej aplikacji przy skali 200%,
+bez obróbki i bez rzeczywistych dokumentów użytkowników.
+Dodatkowy pomiar 9 zmian języka w pojedynczym oknie: mediana 99,4 ms,
+maksymalnie 144,4 ms. Nie jest to gwarancja szybkości na każdym komputerze.
+
+Potwierdzono obecność qtbase_pl.qm i qtbase_uk.qm w instalacji PySide6;
+specyfikacja PyInstaller kopiuje je do zasobów zbudowanego klienta.
+Nie wykonano budowy ani uruchomienia EXE na Windows. Sterowniki skanera,
+Windows Defender, DPAPI i Dysk Google na Windows wymagają kontroli
+na docelowym komputerze. Język komunikatów usług zewnętrznych jest odrębny.
