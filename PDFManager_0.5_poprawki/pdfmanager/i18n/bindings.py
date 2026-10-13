@@ -91,6 +91,7 @@ class UiTranslations(QObject):
                     self.caption(obj,'toolTip',obj.toolTip,obj.setToolTip)
                 if isinstance(obj,(QAction,QLabel,QAbstractButton)) and not (isinstance(obj,QToolButton) and obj.defaultAction()):
                     self.caption(obj,'text',obj.text,obj.setText)
+                    if isinstance(obj,QAbstractButton):self.caption(obj,'accessibleName',obj.accessibleName,obj.setAccessibleName)
                 if isinstance(obj,QAction):
                     self.caption(obj,'toolTip',obj.toolTip,obj.setToolTip)
                     self.caption(obj,'statusTip',obj.statusTip,obj.setStatusTip)

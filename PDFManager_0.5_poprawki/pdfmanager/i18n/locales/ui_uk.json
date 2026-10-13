@@ -579,5 +579,22 @@
   "Wypełnij formularz": "Заповнити форму",
   "Zastosuj reguły kierowania — utwórz kopie w docelowych szafkach": "Застосувати правила розподілу — створити копії у шафах призначення",
   "Wszystkie dokumenty": "Усі документи",
-  "Ctrl+Shift+T — centrum spedycji\nCtrl+Alt+N — zapisz i otwórz następny PDF w tym folderze\nCtrl+S — zapis; dokumenty API Drive trafiają do bezpiecznej kolejki.": "Ctrl+Shift+T — центр експедирування\nCtrl+Alt+N — зберегти та відкрити наступний PDF у цій папці\nCtrl+S — збереження; документи Drive API потрапляють до захищеної черги."
+  "Ctrl+Shift+T — centrum spedycji\nCtrl+Alt+N — zapisz i otwórz następny PDF w tym folderze\nCtrl+S — zapis; dokumenty API Drive trafiają do bezpiecznej kolejki.": "Ctrl+Shift+T — центр експедирування\nCtrl+Alt+N — зберегти та відкрити наступний PDF у цій папці\nCtrl+S — збереження; документи Drive API потрапляють до захищеної черги.",
+  "Powiększ czcionkę": "Збільшити розмір шрифту",
+  "Zmniejsz czcionkę": "Зменшити розмір шрифту",
+  "Pogrubienie": "Жирний",
+  "Kursywa": "Курсив",
+  "Indeks dolny": "Нижній індекс",
+  "Indeks górny": "Верхній індекс",
+  "Sortuj akapity": "Сортувати абзаци",
+  "Pokaż znaki formatowania": "Показати знаки форматування",
+  "Wyrównaj do lewej": "Вирівняти ліворуч",
+  "Wyśrodkuj": "По центру",
+  "Wyrównaj do prawej": "Вирівняти праворуч",
+  "Wyjustuj": "За шириною",
+  "Interlinia": "Міжрядковий інтервал",
+  "Style": "Стилі",
+  "Podgląd stylów": "Попередній перегляд стилів",
+  "Dokument PDF": "Документ PDF",
+  "Przewiń style": "Прокрутити стилі"
 }

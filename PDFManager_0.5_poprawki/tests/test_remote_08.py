@@ -48,7 +48,7 @@ def test_block_persists_and_replay_cannot_clear_release(setup):
 
 def test_update_after_activation_does_not_reblock(setup,tmp_path):
     admin,state,device,config=setup;blocked=control(admin,device);state.apply(blocked['payload']);state.release();assert not state.blocked()
-    exe=tmp_path/'setup.exe';exe.write_bytes(b'MZsigned installer');update=admin.release(exe,'0.11.1',config['base_url']);payload=admin.command(device,True,update=update)['payload'];state.apply(payload);assert not state.blocked()
+    exe=tmp_path/'setup.exe';exe.write_bytes(b'MZsigned installer');update=admin.release(exe,'0.12.1',config['base_url']);payload=admin.command(device,True,update=update)['payload'];state.apply(payload);assert not state.blocked()
 
 def test_offline_does_not_erase_block(setup):
     admin,state,device,config=setup;state.apply(control(admin,device)['payload']);transport=MagicMock();transport.open.side_effect=OSError('offline');client=ControlClient(config,state,transport)
@@ -69,14 +69,14 @@ def test_https_and_redirects_enforced(setup):
     with pytest.raises(ValueError):RedirectPolicy(config['base_url']).redirect_request(MagicMock(),None,302,'',{},'https://other.example/file')
 
 def test_download_verifies_hash_and_size(setup,tmp_path):
-    admin,state,device,config=setup;exe=tmp_path/'a.exe';blob=b'MZsafe test, not executed';exe.write_bytes(blob);update=admin.release(exe,'0.11.1',config['base_url']);envelope=admin.command(device,False,update=update)
+    admin,state,device,config=setup;exe=tmp_path/'a.exe';blob=b'MZsafe test, not executed';exe.write_bytes(blob);update=admin.release(exe,'0.12.1',config['base_url']);envelope=admin.command(device,False,update=update)
     client=ControlClient(config,state,Transport(envelope,blob));out=client.download(envelope,tmp_path/'cache');assert out.read_bytes()==blob
     out.unlink();client.transport.installer=b'MZtampered'
     with pytest.raises(ValueError):client.download(envelope,tmp_path/'cache')
     assert not out.exists();assert not list((tmp_path/'cache').glob('*.tmp'))
 
 def test_download_rejects_other_origin(setup,tmp_path):
-    admin,state,device,config=setup;blob=b'MZtest';update={'url':'https://other.example/a.exe','version':'0.11.1','size':len(blob),'sha256':hashlib.sha256(blob).hexdigest()};envelope=admin.command(device,False,update=update);client=ControlClient(config,state,Transport(envelope,blob))
+    admin,state,device,config=setup;blob=b'MZtest';update={'url':'https://other.example/a.exe','version':'0.12.1','size':len(blob),'sha256':hashlib.sha256(blob).hexdigest()};envelope=admin.command(device,False,update=update);client=ControlClient(config,state,Transport(envelope,blob))
     with pytest.raises(ValueError):client.download(envelope,tmp_path/'cache')
     assert not (tmp_path/'cache').exists()
 
@@ -123,15 +123,15 @@ def test_private_key_encrypted_and_not_in_public_root(setup):
     with pytest.raises(ValueError):AdminWorkspace(admin.folder).unlock('wrong-password-123')
 
 def test_updater_tamper_rejected_before_execution(setup,tmp_path):
-    admin,state,device,config=setup;exe=tmp_path/'setup.exe';exe.write_bytes(b'MZtest');update=admin.release(exe,'0.11.1',config['base_url']);envelope=admin.command(device,False,update=update);root=tmp_path/'install';root.mkdir();(root/'PDFManager.exe').write_bytes(b'not executable');plan={'envelope':envelope,'installer':str(exe),'root':str(root),'pid':123}
+    admin,state,device,config=setup;exe=tmp_path/'setup.exe';exe.write_bytes(b'MZtest');update=admin.release(exe,'0.12.1',config['base_url']);envelope=admin.command(device,False,update=update);root=tmp_path/'install';root.mkdir();(root/'PDFManager.exe').write_bytes(b'not executable');plan={'envelope':envelope,'installer':str(exe),'root':str(root),'pid':123}
     exe.write_bytes(b'MZtampered');run=MagicMock()
     with pytest.raises(ValueError):apply(plan,config,device,wait=MagicMock(),run=run,restart=MagicMock())
     run.assert_not_called()
 
 def test_installer_runs_only_after_wait_and_recheck(setup,tmp_path):
-    admin,state,device,config=setup;exe=tmp_path/'setup.exe';exe.write_bytes(b'MZtest');update=admin.release(exe,'0.11.1',config['base_url']);envelope=admin.command(device,False,update=update);root=tmp_path/'install';root.mkdir();(root/'PDFManager.exe').write_bytes(b'not executable');plan={'envelope':envelope,'installer':str(exe),'root':str(root),'pid':123}
+    admin,state,device,config=setup;exe=tmp_path/'setup.exe';exe.write_bytes(b'MZtest');update=admin.release(exe,'0.12.1',config['base_url']);envelope=admin.command(device,False,update=update);root=tmp_path/'install';root.mkdir();(root/'PDFManager.exe').write_bytes(b'not executable');plan={'envelope':envelope,'installer':str(exe),'root':str(root),'pid':123}
     order=[];run=MagicMock(side_effect=lambda *a,**k:(order.append('run') or MagicMock(returncode=0)));restart=MagicMock(side_effect=lambda *a,**k:order.append('restart'))
-    assert apply(plan,config,device,wait=lambda pid:order.append('wait'),run=run,restart=restart)=='0.11.1';assert order==['wait','run','restart'];assert run.call_args.args[0][1]=='/VERYSILENT'
+    assert apply(plan,config,device,wait=lambda pid:order.append('wait'),run=run,restart=restart)=='0.12.1';assert order==['wait','run','restart'];assert run.call_args.args[0][1]=='/VERYSILENT'
 
 def test_real_https_enrollment_control_and_private_path_denial(setup):
     from urllib.error import HTTPError
@@ -139,7 +139,7 @@ def test_real_https_enrollment_control_and_private_path_denial(setup):
     admin,state,device,config=setup;admin.create_tls('https://localhost','very-long-test-password');server=serve(admin,0,str(admin.folder/'tls-server.crt'),str(admin.folder/'tls-server.key'),'very-long-test-password',host='127.0.0.1')
     try:
         config=admin.configuration('https://localhost:'+str(server.server_address[1]));client=ControlClient(config,state);assert client.poll() is None
-        assert admin.devices()[device]['version']=='0.11.0'
+        assert admin.devices()[device]['version']=='0.12.0'
         control(admin,device);assert client.poll()['payload']['blocked'];assert state.blocked()
         with pytest.raises(HTTPError):client.transport.open(Request(config['base_url']+'/../management-signing.pem'),timeout=5)
         wrong=admin.configuration('https://127.0.0.1:'+str(server.server_address[1]));bad=ControlClient(wrong,state)

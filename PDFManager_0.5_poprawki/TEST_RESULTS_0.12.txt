@@ -1,0 +1,34 @@
+PDFManager 0.12 — testy nowego paska formatowania, Linux / Python 3.12
+
+Sprawdzony zestaw odpowiedni do zmian interfejsu oraz numeru wydania:
+QT_QPA_PLATFORM=offscreen XDG_CACHE_HOME=/tmp/pdfmanager-cache
+XDG_CONFIG_HOME=/tmp/pdm12-final-test-config XDG_DATA_HOME=/tmp/pdm12-final-test-data
+python -m pytest tests/test_format_ribbon_012.py tests/test_word_010.py
+  tests/test_ui_language_011.py tests/test_i18n.py tests/test_remote_08.py
+  tests/test_shared_09.py -q -o faulthandler_timeout=45
+79 passed in 25.60s.
+
+Po końcowym dopracowaniu kolorów ikon powtórzono:
+python -m pytest tests/test_format_ribbon_012.py -q
+2 passed in 1.01s. Są to dwa testy z powyższego zestawu, nie kolejne testy.
+
+Sprawdzono kliknięcie rzeczywistych kafelków stylów po zmianie języka,
+rozmiar i pogrubienie tytułu, kursywę podtytułu, zachowanie zaznaczenia
+oraz tekstu z polskimi znakami. Galeria i lista stylów wskazują tę samą opcję.
+Sprawdzono tłumaczenie podpowiedzi i nazw dostępności przycisków oraz
+rysowanie ikon w 200% DPI, również w stanie wyłączenia.
+
+Istniejące testy potwierdzają zapis formatowania do PDF, cofanie, ochronę
+oryginału, listy, akapity, podkreślenia i obsługę zbyt małego pola tekstowego.
+Testy przełączania języka i protokołu aktualizacji nadal przechodzą.
+
+Pełnego zestawu testów nie powtarzano dla tej zmiany wyglądu. Wynik pełnego
+zestawu poprzedniego wydania 0.11: 398 zaliczonych, 1 oczekiwany błąd OCR
+(zobacz TEST_RESULTS_0.11.txt). Nie jest to wynik pełnego zestawu wersji 0.12.
+
+Zrzuty previews_0.12 są rzeczywistymi zrzutami aplikacji i widżetu paska
+przy skali 200%, z dokumentem demonstracyjnym. Nie użyto grafik ze screenu
+Microsoft Word. Ikony PDFManagera są rysowane przez własny QIconEngine.
+
+Nie wykonano budowy ani uruchomienia EXE na Windows. Poprawiony wygląd
+wymaga ponownego zbudowania aplikacji zgodnie z README_0.12.md.

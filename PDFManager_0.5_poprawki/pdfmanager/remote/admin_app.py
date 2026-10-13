@@ -25,7 +25,7 @@ class AdminWindow(QMainWindow):
         button('Zablokuj wybrany komputer — pokaż okno kodu',lambda:self.command(True));button('Cofnij zdalną blokadę',lambda:self.command(False))
         self.days=QSpinBox();self.days.setRange(1,3650);self.days.setValue(180);form.addRow('Nowy dostęp (dni):',self.days)
         button('Wystaw jednorazowy kod dla wybranego komputera',self.grant);self.code=QPlainTextEdit();self.code.setMaximumHeight(80);self.code.setReadOnly(True);layout.addWidget(self.code)
-        self.version=QLineEdit('0.11.1');form.addRow('Wersja instalatora aktualizacji:',self.version)
+        self.version=QLineEdit('0.12.1');form.addRow('Wersja instalatora aktualizacji:',self.version)
         button('Wyślij podpisaną aktualizację EXE',self.update)
         toggle=button('Ustawienia zaawansowane ▾',lambda:self.advanced.setVisible(not self.advanced.isVisible()))
         self.advanced=QGroupBox('Zaawansowane / dotychczasowe połączenie HTTPS');advanced=QVBoxLayout(self.advanced);layout.addWidget(self.advanced);self.advanced.hide()

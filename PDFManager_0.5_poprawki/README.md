@@ -1,3 +1,13 @@
+# PDFManager 0.12 — nowy pasek formatowania
+
+Kolorowe ikony wektorowe, kompaktowe grupy narzędzi i galeria stylów tekstu.
+Zachowano działające funkcje PDF oraz obsługę polskiego, angielskiego i ukraińskiego.
+
+- [Instrukcja i budowa EXE](README_0.12.md)
+- [Wygląd paska](previews_0.12/02_pasek.png)
+- [Pełny projekt 0.12 w ZIP](../downloads/PDFManager_0.12_pelny_projekt.zip)
+- [Wyniki testów](TEST_RESULTS_0.12.txt)
+
 # PDFManager 0.11 — poprawiona zmiana języka
 
 Menu, osiem zakładek, wstążka, pasek czcionek i ustawienia zmieniają język

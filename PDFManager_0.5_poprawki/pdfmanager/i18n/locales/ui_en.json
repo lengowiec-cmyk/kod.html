@@ -579,5 +579,22 @@
   "Wypełnij formularz": "Fill form",
   "Zastosuj reguły kierowania — utwórz kopie w docelowych szafkach": "Apply routing rules — create copies in destination cabinets",
   "Wszystkie dokumenty": "All documents",
-  "Ctrl+Shift+T — centrum spedycji\nCtrl+Alt+N — zapisz i otwórz następny PDF w tym folderze\nCtrl+S — zapis; dokumenty API Drive trafiają do bezpiecznej kolejki.": "Ctrl+Shift+T — transport center\nCtrl+Alt+N — save and open next PDF in this folder\nCtrl+S — save; Drive API documents enter the secure queue."
+  "Ctrl+Shift+T — centrum spedycji\nCtrl+Alt+N — zapisz i otwórz następny PDF w tym folderze\nCtrl+S — zapis; dokumenty API Drive trafiają do bezpiecznej kolejki.": "Ctrl+Shift+T — transport center\nCtrl+Alt+N — save and open next PDF in this folder\nCtrl+S — save; Drive API documents enter the secure queue.",
+  "Powiększ czcionkę": "Increase font size",
+  "Zmniejsz czcionkę": "Decrease font size",
+  "Pogrubienie": "Bold",
+  "Kursywa": "Italic",
+  "Indeks dolny": "Subscript",
+  "Indeks górny": "Superscript",
+  "Sortuj akapity": "Sort paragraphs",
+  "Pokaż znaki formatowania": "Show formatting marks",
+  "Wyrównaj do lewej": "Align left",
+  "Wyśrodkuj": "Center",
+  "Wyrównaj do prawej": "Align right",
+  "Wyjustuj": "Justify",
+  "Interlinia": "Line spacing",
+  "Style": "Styles",
+  "Podgląd stylów": "Style previews",
+  "Dokument PDF": "PDF document",
+  "Przewiń style": "Scroll styles"
 }
