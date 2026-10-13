@@ -36,6 +36,7 @@ class CacheCipher:
 def crypt_file(source,target,*,decrypt=False):
     """Authenticated streamed encryption/decryption; never commits unauthenticated data."""
     import tempfile
+    from pdfmanager.dms.jobs import checkpoint
     from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
     from pdfmanager.dms.recovery import data_dir
     source=Path(source);target=Path(target)
@@ -52,13 +53,13 @@ def crypt_file(source,target,*,decrypt=False):
                 transform=Cipher(algorithms.AES(cipher.key),modes.GCM(nonce,tag)).decryptor();transform.authenticate_additional_data(magic)
                 remaining=size-36
                 while remaining:
-                    block=input_file.read(min(1024*1024,remaining))
+                    checkpoint();block=input_file.read(min(1024*1024,remaining))
                     if not block:raise ValueError('Niepełna kopia.')
                     remaining-=len(block);output.write(transform.update(block))
                 output.write(transform.finalize())
             else:
                 nonce=os.urandom(12);transform=Cipher(algorithms.AES(cipher.key),modes.GCM(nonce)).encryptor();transform.authenticate_additional_data(magic);output.write(magic+nonce)
-                for block in iter(lambda:input_file.read(1024*1024),b''):output.write(transform.update(block))
+                for block in iter(lambda:input_file.read(1024*1024),b''):checkpoint();output.write(transform.update(block))
                 output.write(transform.finalize());output.write(transform.tag)
             output.flush();os.fsync(output.fileno())
         temporary.replace(target)

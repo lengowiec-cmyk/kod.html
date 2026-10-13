@@ -1,0 +1,2879 @@
+[
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dodaj PDF-y",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Edytuj zadanie",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Otwórz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Odśwież",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Eksport CSV",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Usuń wpis",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zapisz ulubione narzędzia na pasku",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Sprawdź gotowość stanowiska",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Przygotuj skany według profilu",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Otwórz ostatni folder",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zarezerwuj / odnów na 15 minut",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zwolnij rezerwację",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Sprawdź, kto edytuje",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dodaj bieżący PDF do kolejki",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Wyślij / ponów kolejkę",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Odśwież",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zachowaj lokalną kopię wpisu",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Usuń wybrany wpis",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Historia wersji PDFManagera",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Historia zmian oryginału Drive",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Automatycznie ponawiaj kolejkę co minutę przy otwartym dokumencie Drive",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dodaj PDF-y",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Usuń z listy",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Wyczyść",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Utwórz pakiet z okładką i numeracją",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Porównaj dwa pierwsze pliki",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Przetwórz listę do nowego folderu",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Trwale usuń poufne dane w bieżącym PDF",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Wybierz katalog",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Utwórz teczkę ze strukturą folderów",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Otwórz teczkę zlecenia",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Ostatnie foldery",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Podpisany CMR — sprawdzono",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dołącz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "POD — sprawdzono",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dołącz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Faktura — sprawdzono",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dołącz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "AWB — sprawdzono",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dołącz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "HAWB — sprawdzono",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dołącz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "MAWB — sprawdzono",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dołącz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Faktura handlowa — sprawdzono",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dołącz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Lista pakunkowa — sprawdzono",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dołącz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dokumenty celne — sprawdzono",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dołącz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zapisz listę kontrolną",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Sprawdź braki we wszystkich teczkach",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Podpowiedz dane z tekstu / OCR",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zapisz bieżący PDF z automatyczną nazwą",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zapisz nową wersję bez nadpisywania",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Wstaw wybrany gotowy wzór",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dodaj wstawkę do ulubionych",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Wstaw obraz / logo",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Nowy wzór",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zapisz wzór",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Usuń wzór",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Kolor tekstu",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Czcionka Unicode / wybierz TTF",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Ramka stempla",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Dodaj datę, godzinę i pracownika",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zapisz profil pozycji",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Nowy profil",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Podgląd na bieżącej stronie",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Wstaw na bieżącej stronie",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Centrum spedycji",
+    "control": "Zamknij",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Skanuj dokumenty przez Windows Defender przed przetwarzaniem",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Zaszyfruj starsze lokalne kopie…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Przygotuj paczkę do udostępnienia…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Rozpoznaj kody w PDF…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Podziel dokument według kodów…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Otwórz reguły",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Odzyskaj dokument…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Kopie zapasowe…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Domyślnie uwzględniaj podfoldery",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Domyślnie przeszukuj treść PDF",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Wyczyść indeks",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Profile skanowania…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Folder skanera i automatyczny import…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Podgląd PDF obok listy dokumentów",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Szablony folderów…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Większa czcionka interfejsu",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Kompaktowa wstążka",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Zapisz ustawienia",
+    "type": "QPushButton",
+    "connection": "QDialogButtonBox",
+    "enabled": true
+  },
+  {
+    "scope": "Ustawienia",
+    "control": "Anuluj",
+    "type": "QPushButton",
+    "connection": "QDialogButtonBox",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz folder...",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz plik PDF...",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zapisz jako...",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Połącz z Google Dyskiem...",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dodaj do kolejki Google Drive",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zapisz jako nowy plik na Dysku...",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zamknij kartę",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zakończ",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zaznacz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Edytuj tekst",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podświetl",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podkreśl",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przekreśl",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Notatka",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Pole tekstowe",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Prostokąt",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Elipsa",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Linia",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Obraz / podpis...",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Usuń adnotację",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Cofnij",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Powtórz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zarządzaj stronami...",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Scalaj pliki PDF...",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Sprawdź pisownię i gramatykę...",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Powiększ",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zmniejsz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dopasuj do szerokości",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Rozmiar rzeczywisty (100%)",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Polski",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "English",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Українська",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Jasny",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ciemny",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwieraj wszystkie pliki PDF domyślnie",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Sprawdź, czy ta aplikacja jest domyślna dla PDF",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Pokaż plik dziennika (log.txt)",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "O programie",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "main",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz folder",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Poprzednia strona",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Następna strona",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zmniejsz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Powiększ",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dopasuj do szerokości",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "annotations",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Strony",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Scal",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "OCR",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Języki OCR",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "OCR do tekstu",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Eksport tekstu",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Znajdź",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz obraz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "PNG / JPEG",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Znak wodny",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Numeracja",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Spłaszcz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przytnij",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Rozmiar",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Formularz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zakładki",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Porównaj",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Hasło",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Usuń hasło",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Optymalizuj",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dodaj załącznik",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zapisz załącznik",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podpis PKCS#12",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Sprawdź podpisy",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wsadowo",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Drukuj",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Foldery",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "O programie",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wstaw tekst / obraz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wklej ze schowka",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Szafki",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dodaj szafkę",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Nowy klient",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Szablony folderów",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Import skanów",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Folder skanera",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podziel PDF wsadowo",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Szukaj w szafce",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zapisz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Odzyskaj dokument",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kopie zapasowe",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kosz",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ulubione szafki",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dodaj do ulubionych",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ostatnie dokumenty",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia importu skanów",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Włącz / wyłącz obserwowanie",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Skanuj WIA",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Aplikacja skanera TWAIN",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Edycja tekstu",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Panel czcionek",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przesuń dodany element",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Skaluj dodany element",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Profile skanowania",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podział wg kodów",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kody kreskowe",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Udostępnij paczkę",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Spedycja",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zapisz i następny",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dodaj do kolejki",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wyślij kolejkę",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Odbij poziomo",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Odbij pionowo",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Obrót skanu",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Prostowanie",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Poziomy",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Perspektywa",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Tryb nocny",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przenieś miniatury",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Strony na arkuszu",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dwa dokumenty",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kolor adnotacji",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Skróty klawiatury",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Rysuj",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Usuń poufne dane",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kopiuj tekst",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "OCR obszaru",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Narysuj podpis",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wielokąt",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Strzałka",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Plik",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Edycja",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Strony",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Narzędzia",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Szafki i skanowanie",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Konwersja",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dokument",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Obrazy",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Porównanie i druk",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Widok",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Język interfejsu",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wygląd",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Pomoc",
+    "type": "QAction",
+    "connection": "menu",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ulubione narzędzia",
+    "type": "QAction",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Folder przychodzący",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Folder docelowy…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kopiuj zaznaczone →",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Nowa reguła",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Edytuj",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Usuń",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przetwórz dokumenty…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przed kierowaniem wykonaj OCR (skany)",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dodaj wydatek",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Edytuj",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Usuń",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Eksport CSV",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wybierz folder",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Szukaj także w treści PDF",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Uwzględnij podfoldery",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wyczyść indeks PDF",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Filtruj datę modyfikacji",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Szukaj",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "PL",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "EN",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "UK",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz dokument",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wybierz folder",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wklej",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wytnij",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kopiuj",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Malarz formatów",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Powiększ czcionkę",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zmniejsz czcionkę",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wyczyść format",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Pogrubienie",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kursywa",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podkreśl",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przekreśl",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Indeks dolny",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Indeks górny",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kolor tekstu",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zakreślenie",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "• Lista",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "1. Lista",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "← Wcięcie",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wcięcie →",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Sortuj akapity",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Pokaż znaki formatowania",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wyrównaj do lewej",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wyśrodkuj",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wyrównaj do prawej",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wyjustuj",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Tło",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ramka",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Normalny",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Bez odstępów",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Nagłówek 1",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Nagłówek 2",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Tytuł",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podtytuł",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "›",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Edytuj tekst PDF",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Nowy tekst",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zastosuj do PDF",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz folder",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Poprzednia strona",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Następna strona",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zmniejsz",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Powiększ",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dopasuj do szerokości",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Cofnij",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Powtórz",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przesuń dodany element",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Skaluj dodany element",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Tryb nocny",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dwa dokumenty",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zaznacz",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Edytuj tekst",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podświetl",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podkreśl",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przekreśl",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Notatka",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Pole tekstowe",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Prostokąt",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Elipsa",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Linia",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Obraz / podpis",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Usuń adnotację",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kolor adnotacji",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Rysuj",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Usuń poufne dane",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kopiuj tekst",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "OCR obszaru",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Narysuj podpis",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Wielokąt",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Strzałka",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zastosuj do PDF",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przywróć zapisany szkic",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Utwórz przeszukiwalny PDF przez OCR",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Automatycznie prostuj niewielkie przekrzywienia skanu",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Pomijaj niemal białe, puste strony",
+    "type": "QCheckBox",
+    "connection": "pole formularza (odczyt przy zastosowaniu / zapisie)",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Nowy",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zapisz profil",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Usuń",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Importuj skany według profilu…",
+    "type": "QPushButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zamknij",
+    "type": "QPushButton",
+    "connection": "QDialogButtonBox",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "—",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "□",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "×",
+    "type": "QToolButton",
+    "connection": "podłączony",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Profile skanowania",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kody kreskowe",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia importu skanów",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Włącz / wyłącz obserwowanie",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Udostępnij paczkę",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "O programie",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz plik PDF",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Znajdź",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Porównaj",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Eksport tekstu",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "O programie",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz obraz",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "PNG / JPEG",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Odbij poziomo",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Odbij pionowo",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Obrót skanu",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Prostowanie",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Poziomy",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Perspektywa",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Spłaszcz",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "OCR",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Skanuj WIA",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Profile skanowania",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Import skanów",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia importu skanów",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Włącz / wyłącz obserwowanie",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Aplikacja skanera TWAIN",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Folder skanera",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Foldery",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz plik PDF",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "OCR",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Scal",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Strony",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "PNG / JPEG",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz plik PDF",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Foldery",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "O programie",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Spedycja",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Otwórz plik PDF",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zapisz",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zapisz jako",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Drukuj",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Strony",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Formularz",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "OCR",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Przytnij",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "PNG / JPEG",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Znak wodny",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Numeracja",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podpis PKCS#12",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Panel czcionek",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "O programie",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Spedycja",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Szafki",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Dodaj szafkę",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Nowy klient",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Szablony folderów",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ulubione szafki",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kosz",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Scal",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podziel PDF wsadowo",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Kody kreskowe",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Podział wg kodów",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": false
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Szukaj w szafce",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Udostępnij paczkę",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Ustawienia",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Spedycja",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  },
+  {
+    "scope": "Okno główne",
+    "control": "Zapisz i następny",
+    "type": "QToolButton",
+    "connection": "QAction",
+    "enabled": true
+  }
+]

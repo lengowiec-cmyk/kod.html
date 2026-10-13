@@ -171,3 +171,27 @@ def payload(editor):
         if not paragraph['runs']:paragraph['runs']=[{'text':'\n','family':'DejaVu Sans','size':11,'color':(0,0,0)}]
         paragraphs.append(paragraph);block=block.next()
     return paragraphs
+
+def restore_payload(editor,paragraphs):
+    """Restore our structured draft without passing HTML or external resources to Qt."""
+    if not isinstance(paragraphs,list) or len(paragraphs)>1000:raise ValueError('Nieprawidłowy szkic.')
+    editor.clear();cursor=editor.textCursor();active_list=None;active_kind=None
+    for i,p in enumerate(paragraphs):
+        if i:cursor.insertBlock()
+        block=QTextBlockFormat();block.setAlignment({'left':Qt.AlignLeft,'center':Qt.AlignHCenter,'right':Qt.AlignRight,'justify':Qt.AlignJustify}.get(p.get('align'),Qt.AlignLeft));block.setIndent(min(20,max(0,int(p.get('indent',0)))));block.setBottomMargin(float(p.get('after',0)));block.setLineHeight(float(p.get('spacing',1))*100,QTextBlockFormat.ProportionalHeight.value);block.setProperty(QTextCharFormat.UserProperty+7,bool(p.get('border')))
+        if 'background' in p:block.setBackground(QColor(*p['background']))
+        cursor.setBlockFormat(block)
+        if p.get('prefix'):
+            kind=QTextListFormat.ListDisc if p['prefix']=='• ' else QTextListFormat.ListDecimal
+            if active_list is not None and active_kind==kind:active_list.add(cursor.block())
+            else:
+                listing=QTextListFormat();listing.setStyle(kind);listing.setIndent(1)
+                if kind==QTextListFormat.ListDecimal:listing.setStart(int(p['prefix'].split('.')[0]))
+                active_list=cursor.createList(listing);active_kind=kind
+        else:active_list=None;active_kind=None
+        for run in p.get('runs',[]):
+            f=QTextCharFormat();f.setFontFamilies([run.get('family','DejaVu Sans')]);f.setFontPointSize(float(run.get('size',11)));f.setFontWeight(QFont.Bold if run.get('bold') else QFont.Normal);f.setFontItalic(bool(run.get('italic')));f.setFontUnderline(bool(run.get('underline')));f.setFontStrikeOut(bool(run.get('strike')));f.setForeground(QColor(*run.get('color',[0,0,0])))
+            f.setVerticalAlignment(QTextCharFormat.AlignSuperScript if run.get('script')=='super' else QTextCharFormat.AlignSubScript if run.get('script')=='sub' else QTextCharFormat.AlignNormal)
+            if 'background' in run:f.setBackground(QColor(*run['background']))
+            cursor.insertText(run['text'] if run['text']!='\n' else '',f)
+    editor.setTextCursor(cursor)

@@ -76,8 +76,10 @@ class DriveBrowserDialog(QDialog):
     def _load_current_folder(self) -> None:
         folder_id, _ = self._folder_stack[-1]
         try:
-            files = self._client.list_folder(folder_id)
-        except DriveApiError as exc:
+            from pdfmanager.ui.responsive import run
+            from pdfmanager.drive.api_client import worker_client
+            files = run(lambda:worker_client(self._client).list_folder(folder_id),self,translator.tr('drive.browser_title'))
+        except Exception as exc:
             QMessageBox.critical(self, translator.tr("drive.error_title"), str(exc))
             files = []
         self._populate_list(files)
@@ -130,8 +132,10 @@ class DriveBrowserDialog(QDialog):
             self._load_current_folder()
             return
         try:
-            files = [f for f in self._client.search(query) if f.is_folder or f.mime_type == "application/pdf"]
-        except DriveApiError as exc:
+            from pdfmanager.ui.responsive import run
+            from pdfmanager.drive.api_client import worker_client
+            files = run(lambda:[f for f in worker_client(self._client).search(query) if f.is_folder or f.mime_type == 'application/pdf'],self,translator.tr('drive.browser_title'))
+        except Exception as exc:
             QMessageBox.critical(self, translator.tr("drive.error_title"), str(exc))
             return
         self._populate_list(files)

@@ -130,8 +130,12 @@ def test_safe_gui_edits_and_undo_keep_source(qapp,tmp_path):
     win=MainWindow();win.open_document(str(path));viewer=win._current_viewer()
     viewer.add_note_at((80,80),'Test')
     assert path.read_bytes()==before and viewer.working_copy.dirty
-    viewer.undo();assert path.read_bytes()==before
+    viewer.undo();assert path.read_bytes()==before and viewer.path.read_bytes()==before
+    # An unchanged working copy is discarded; retain a real pending edit
+    # to exercise encrypted recovery rather than a redundant no-op backup.
+    viewer.redo()
     win.close();assert viewer.working_copy.path.exists()
+    assert viewer.working_copy.path.suffix=='.pdm' and path.read_bytes()==before
 
 def test_wia_is_explicitly_windows_only(tmp_path,monkeypatch):
     import pdfmanager.windows.scanner as scanner
@@ -286,9 +290,9 @@ def test_failed_save_does_not_prune_previous_backups(tmp_path,monkeypatch):
     source=tmp_path/'source.pdf';pdf(source)
     copy=WorkingCopy(source,tmp_path/'recovery');pdf(copy.path,'Changed');copy.changed()
     calls=[];real=module.atomic_copy_file
-    def fail_commit(src,target):
+    def fail_commit(src,target,**kwargs):
         if Path(target)==source:raise OSError('Simulated write failure')
-        return real(src,target)
+        return real(src,target,**kwargs)
     monkeypatch.setattr(module,'atomic_copy_file',fail_commit)
     monkeypatch.setattr(module,'prune_backups',lambda *args,**kwargs:calls.append(args))
     with pytest.raises(OSError):copy.save()

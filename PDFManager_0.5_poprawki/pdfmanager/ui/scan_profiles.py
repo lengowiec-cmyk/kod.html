@@ -14,7 +14,8 @@ class ScanProfilesDialog(QDialog):
         self.color=QComboBox();self.color.addItems(['Kolor','Szarość','Czerń i biel']);form.addRow('Kolor:',self.color)
         self.rotation=QComboBox();self.rotation.addItems(['0','90','180','270']);form.addRow('Obrót:',self.rotation)
         self.ocr=QCheckBox('Utwórz przeszukiwalny PDF przez OCR');form.addRow(self.ocr)
-        self.language=QComboBox();self.language.addItems(['pol','eng','ukr']);form.addRow('Język:',self.language)
+        self.language=QComboBox();self.language.addItems(['pol','eng','ukr','pol+eng','ukr+eng','pol+eng+ukr']);form.addRow('Język:',self.language)
+        self.deskew=QCheckBox('Automatycznie prostuj niewielkie przekrzywienia skanu');form.addRow(self.deskew)
         self.blank=QCheckBox('Pomijaj niemal białe, puste strony');form.addRow(self.blank)
         row=QHBoxLayout()
         for label,callback in [('Nowy',self.new),('Zapisz profil',self.save),('Usuń',self.remove)]:
@@ -24,8 +25,8 @@ class ScanProfilesDialog(QDialog):
         self.names.currentTextChanged.connect(self.load);self.load(self.names.currentText())
     def load(self,name):
         p=self.store.all().get(name)
-        if p:self.dpi.setValue(p['dpi']);select_source(self.color,p['color']);self.rotation.setCurrentText(str(p.get('rotation',0)));self.ocr.setChecked(p['ocr']);self.language.setCurrentText(p['language']);self.blank.setChecked(p.get('omit_blank',False))
-    def profile(self):return {'dpi':self.dpi.value(),'color':current_source(self.color),'rotation':int(self.rotation.currentText()),'ocr':self.ocr.isChecked(),'language':self.language.currentText(),'omit_blank':self.blank.isChecked()}
+        if p:self.dpi.setValue(p['dpi']);select_source(self.color,p['color']);self.rotation.setCurrentText(str(p.get('rotation',0)));self.ocr.setChecked(p['ocr']);self.language.setCurrentText(p['language']);self.blank.setChecked(p.get('omit_blank',False));self.deskew.setChecked(p.get('deskew',False))
+    def profile(self):return {'dpi':self.dpi.value(),'color':current_source(self.color),'rotation':int(self.rotation.currentText()),'ocr':self.ocr.isChecked(),'language':self.language.currentText(),'omit_blank':self.blank.isChecked(),'deskew':self.deskew.isChecked()}
     def save(self):self.store.save(self.names.currentText(),self.profile())
     def new(self):
         name,ok=QInputDialog.getText(self,translator.text('Nowy profil'),translator.text('Nazwa:'))

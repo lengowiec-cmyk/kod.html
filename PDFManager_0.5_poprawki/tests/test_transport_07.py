@@ -119,7 +119,7 @@ def test_transport_ui_and_shortcuts(qapp):
     from pdfmanager.ui.main_window import MainWindow
     from pdfmanager.ui.transport_center import TransportCenter
     win=MainWindow();dialog=TransportCenter(win)
-    assert dialog.tabs.count()==5;assert dialog.entry.count()>=9;assert dialog.profile.count()>=4
+    assert dialog.tabs.count()==6;assert dialog.entry.count()>=9;assert dialog.profile.count()>=4
     assert win._transport_actions['transport_center'].shortcut().toString()=='Ctrl+Shift+T';assert win._transport_actions['save_next'].shortcut().toString()=='Ctrl+Alt+N'
     dialog.temp.cleanup();win.close()
 

@@ -96,6 +96,7 @@ def get_credentials(client_secret_path: Path | None = None, interactive: bool = 
         )
 
     flow = InstalledAppFlow.from_client_secrets_file(str(client_secret_path), SCOPES)
-    new_creds = flow.run_local_server(port=0)
+    try:new_creds = flow.run_local_server(port=0,timeout_seconds=180)
+    except Exception as exc:raise DriveAuthError('Logowanie Google nie zostało ukończone w ciągu 3 minut. Ponów logowanie.') from exc
     _store_credentials(new_creds)
     return new_creds

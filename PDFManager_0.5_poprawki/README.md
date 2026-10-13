@@ -1,3 +1,10 @@
+# PDFManager 0.13 — spedycja, bezpieczniejszy zapis i kontrola licencji
+
+- [Nowe funkcje i budowa EXE](README_0.13.md)
+- [Wyniki testów i kontrola przycisków](TEST_RESULTS_0.13.md)
+- [Testy stanowiska Windows](CHECKLIST_WINDOWS_0.13.md)
+- [Pełny projekt 0.13 w ZIP](../downloads/PDFManager_0.13_pelny_projekt.zip)
+
 # PDFManager 0.12 — nowy pasek formatowania
 
 Kolorowe ikony wektorowe, kompaktowe grupy narzędzi i galeria stylów tekstu.

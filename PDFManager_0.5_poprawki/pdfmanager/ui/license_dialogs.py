@@ -63,6 +63,8 @@ class ActivationDialog(QDialog):
     def _retranslate(self) -> None:
         self.setWindowTitle(translator.tr("license.activation_title"))
         self._message_label.setText(translator.tr(self._message_key))
+        status=self._manager.get_status()
+        if getattr(status,'reason',''):self._message_label.setText(translator.text(status.reason))
         self._key_edit.setPlaceholderText(translator.tr("license.key_placeholder"))
         self._activate_button.setText(translator.tr("license.activate_button"))
         self._cancel_button.setText(
@@ -89,7 +91,8 @@ class ActivationDialog(QDialog):
         if not key:
             return
         try:
-            self._manager.activate(key)
+            status=self._manager.activate(key)
+            if status.is_blocked:raise LicenseKeyError(status.reason or 'Aktywacja nie odblokowała programu.')
         except LicenseKeyError as exc:
             QMessageBox.critical(self, translator.tr("license.error_title"), str(exc))
             return

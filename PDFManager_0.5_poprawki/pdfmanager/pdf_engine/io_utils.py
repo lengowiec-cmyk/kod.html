@@ -28,6 +28,10 @@ def atomic_write_bytes(path: Path, data: bytes) -> None:
     (``doc.tobytes(...)``) i ZAMKNĄĆ swój ``pymupdf.Document`` — dopiero
     potem wywołać tę funkcję. Patrz docstring modułu.
     """
+    from pdfmanager.security import isolation
+    if isolation.WORKER_MODE:
+        from pdfmanager.security import worker
+        if worker.ACCESS_REQUIRED:worker.require_access()
     from pdfmanager.dms.jobs import checkpoint
     checkpoint()
     path = Path(path)
@@ -72,7 +76,7 @@ def new_pdf_file(path: Path, build: Callable[[pymupdf.Document], None]) -> None:
         doc.close()
     atomic_write_bytes(path, data)
 
-def atomic_copy_file(source: Path,target: Path) -> None:
+def atomic_copy_file(source: Path,target: Path,*,expected_target_sha=None) -> None:
     """Atomic streamed copy avoids loading large documents solely for saving."""
     import tempfile,os,shutil
     from pdfmanager.dms.jobs import checkpoint
@@ -86,5 +90,9 @@ def atomic_copy_file(source: Path,target: Path) -> None:
                 if not block:break
                 output.write(block)
             output.flush();os.fsync(output.fileno())
-        checkpoint();temporary.replace(target)
+        checkpoint()
+        if expected_target_sha is not None:
+            from pdfmanager.dms.recovery import digest
+            if not target.exists() or digest(target)!=expected_target_sha:raise ValueError('Plik docelowy zmienił się podczas zapisu. Zapisz pod nową nazwą.')
+        temporary.replace(target)
     finally:temporary.unlink(missing_ok=True)

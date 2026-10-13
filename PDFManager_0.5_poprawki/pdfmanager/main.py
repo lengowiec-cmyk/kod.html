@@ -29,7 +29,7 @@ def _run_license_gate(license_manager) -> bool:
     if status.state==LicenseState.REMOTE_BLOCKED:
         from pdfmanager.remote.storage import RemoteState
         dialog._message_label.setText('Dostęp został zablokowany przez administratora. Wpisz nowy kod dostępu.\n'+RemoteState().read().get('reason',''))
-    return dialog.exec() == dialog.DialogCode.Accepted
+    return dialog.exec() == dialog.DialogCode.Accepted and not license_manager.get_status().is_blocked
 
 
 def main() -> int:
@@ -75,7 +75,7 @@ def main() -> int:
     window.show()
 
     # Ostrzeżenie o kończącej się licencji — sprawdzane przy KAŻDYM
-    # uruchomieniu (a potem raz na dobę, patrz QTimer w MainWindow).
+    # uruchomieniu (a potem co minutę i przy terminie wygaśnięcia, patrz QTimer w MainWindow).
     window._check_license_and_warn()
 
     # Argumenty wiersza poleceń (ścieżki do plików PDF) — Windows przekazuje

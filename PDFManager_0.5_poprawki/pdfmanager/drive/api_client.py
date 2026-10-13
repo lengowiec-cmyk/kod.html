@@ -170,3 +170,8 @@ def download_request(request,destination):
     except HttpError as exc:
         raise DriveApiError('Nie udało się pobrać dokumentu z Google Drive.') from exc
     finally:temporary.unlink(missing_ok=True)
+
+
+def worker_client(client):
+    """Clone real authenticated HTTP clients; preserve injected offline doubles."""
+    return client.for_thread() if getattr(client,'_credentials',None) is not None else client

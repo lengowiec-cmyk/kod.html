@@ -645,7 +645,9 @@ class MainWindow(QMainWindow):
     def _show_appearance_settings(self):
         from pdfmanager.ui.appearance_dialog import AppearanceDialog
         from pdfmanager.ui.settings_center import SettingsCenter
-        SettingsCenter(self).exec()
+        dialog=SettingsCenter(self)
+        try:dialog.exec()
+        finally:dialog.deleteLater()
 
     def _prompt_open_media(self):
         from pdfmanager.pdf_engine.workflows import merge_inputs
@@ -1023,6 +1025,9 @@ class MainWindow(QMainWindow):
                 self._viewer_stack.setCurrentWidget(self._tabs)
                 return
 
+        if self._tabs.count()>=12:
+            QMessageBox.information(self,'PDFManager',translator.text('Otwarto 12 dokumentów. Zamknij niepotrzebną kartę przed otwarciem kolejnej.'));return
+
         # Workflow B: ostrzegamy, jeśli plik jest jeszcze "tylko w chmurze"
         # (Google Drive for desktop w trybie strumieniowym) — jego otwarcie
         # wywoła pobranie w tle, co może chwilę potrwać albo zawiedzie bez
@@ -1097,17 +1102,30 @@ class MainWindow(QMainWindow):
         )
 
     def _close_tab(self, index: int) -> None:
-        if index < 0:
+        if index<0:return
+        widget=self._tabs.widget(index)
+        if widget is None:return
+        from pdfmanager.ui.background_job import Worker
+        running=[worker for worker in widget.findChildren(Worker) if worker.isRunning()]
+        if running:
+            widget._thumbnail_timer.stop()
+            for worker in running:worker.control.cancelled.set()
+            if not getattr(widget,'_tab_close_requested',False):
+                widget._tab_close_requested=True
+                for worker in running:worker.finished.connect(lambda w=widget:self._finish_tab_close(w))
             return
-        widget = self._tabs.widget(index)
+        if widget is self._text_properties.viewer:
+            self._text_properties.save_draft();self._text_properties._draft_timer.stop();self._text_properties.viewer=None;self._text_properties.span=None
         self._tabs.removeTab(index)
-        if widget is not None:
-            widget.close()
-            widget.deleteLater()
-        if self._tabs.count() == 0:
-            self._viewer_stack.setCurrentWidget(self._viewer_placeholder)
-        self._update_status_bar()
-        self._update_save_as_action()
+        widget.close();widget.deleteLater()
+        if self._tabs.count()==0:self._viewer_stack.setCurrentWidget(self._viewer_placeholder)
+        self._update_status_bar();self._update_save_as_action()
+
+    def _finish_tab_close(self,widget):
+        from shiboken6 import isValid
+        if isValid(widget):
+            index=self._tabs.indexOf(widget)
+            if index>=0:self._close_tab(index)
 
     def _with_viewer(self, func) -> None:
         viewer = self._current_viewer()
@@ -1131,9 +1149,10 @@ class MainWindow(QMainWindow):
             secret_path = chosen
 
         try:
-            credentials = get_credentials(Path(secret_path), interactive=True)
+            from pdfmanager.ui.responsive import run
+            credentials = run(lambda:get_credentials(Path(secret_path),interactive=True),self,translator.tr('drive.browser_title'))
             return DriveApiClient.from_credentials(credentials)
-        except DriveAuthError as exc:
+        except Exception as exc:
             _logger.exception("Logowanie do Google Dysku nie powiodlo sie")
             QMessageBox.critical(self, translator.tr("drive.auth_error_title"), str(exc))
             return None
@@ -1152,8 +1171,10 @@ class MainWindow(QMainWindow):
     def _open_drive_file(self,client,drive_file):
         local_path = cache_path_for(drive_file.id, drive_file.name)
         try:
-            client.download(drive_file.id, local_path)
-        except DriveApiError as exc:
+            from pdfmanager.ui.responsive import run
+            from pdfmanager.drive.api_client import worker_client
+            run(lambda:worker_client(client).download(drive_file.id,local_path),self,translator.tr('drive.browser_title'))
+        except Exception as exc:
             _logger.exception("Pobieranie pliku z Google Dysku nie powiodlo sie: %s", drive_file.id)
             QMessageBox.critical(self, translator.tr("drive.download_error_title"), str(exc))
             return
@@ -1163,7 +1184,7 @@ class MainWindow(QMainWindow):
         if viewer is not None and viewer.is_loaded and Path(viewer.source_path).resolve()==local_path.resolve():
             viewer.drive_info = DriveTabInfo(file_id=drive_file.id, baseline=drive_file, client=client)
             try:
-                account=client._service.about().get(fields='user(permissionId)').execute().get('user',{}).get('permissionId','')
+                account=run(lambda:worker_client(client)._service.about().get(fields='user(permissionId)').execute().get('user',{}).get('permissionId',''),self)
                 if isinstance(account,str) and account:client._team_account_id=account
                 from pdfmanager.drive.teamwork import TeamDrive
                 lease=TeamDrive(client).reservation(drive_file.id)
@@ -1249,7 +1270,9 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self,'Google Drive','Trwa wysyłanie w tle. Poczekaj na wynik przed otwarciem centrum.');return
         self._transport_ui_busy=True
         try:
-            dialog=TransportCenter(self);dialog.exec();dialog.temp.cleanup()
+            dialog=TransportCenter(self)
+            try:dialog.exec()
+            finally:dialog.temp.cleanup();dialog.deleteLater()
         finally:self._transport_ui_busy=False
 
     def _send_transport_queue(self):
@@ -1315,7 +1338,7 @@ class MainWindow(QMainWindow):
         parent_id = info.baseline.parents[0] if info.baseline.parents else None
         try:
             new_file = info.client.upload_new_file(viewer.path, name.strip(), parent_folder_id=parent_id)
-        except DriveApiError as exc:
+        except Exception as exc:
             _logger.exception("Zapis jako nowy plik na Google Dysku nie powiodl sie")
             QMessageBox.critical(self, translator.tr("drive.error_title"), str(exc))
             return
@@ -1343,7 +1366,8 @@ class MainWindow(QMainWindow):
     # ---------------------------------------------------------------- licencja
     def _open_activation_dialog(self) -> None:
         dialog = ActivationDialog(self.license_manager, self, allow_cancel=True)
-        dialog.exec()
+        try:dialog.exec()
+        finally:dialog.deleteLater()
         self._update_license_status_bar()
 
     def _update_license_status_bar(self) -> None:
@@ -1356,8 +1380,11 @@ class MainWindow(QMainWindow):
             self._status_license_label.setVisible(False)
 
     def _check_license_and_warn(self) -> None:
-        """Wywoływane przy starcie i raz na dobę podczas pracy (QTimer)."""
+        """Wywoływane przy starcie, co minutę i dokładnie przy znanym terminie wygaśnięcia."""
         status = self.license_manager.get_status()
+        from datetime import datetime,timezone
+        milliseconds=int((status.expires_at-datetime.now(timezone.utc)).total_seconds()*1000)
+        self._license_check_timer.setInterval(max(1000,min(DAILY_LICENSE_CHECK_MS,milliseconds)))
         self._update_license_status_bar()
         if status.is_blocked:
             self._enforce_license_block();return
@@ -1369,7 +1396,9 @@ class MainWindow(QMainWindow):
         self._last_expiry_warning=today
         warning = ExpiryWarningDialog(status.days_remaining, self)
         warning.exec()
-        if warning.enter_key_requested:
+        enter_key=warning.enter_key_requested
+        warning.deleteLater()
+        if enter_key:
             self._open_activation_dialog()
 
     def _enforce_license_block(self):
@@ -1387,6 +1416,7 @@ class MainWindow(QMainWindow):
             from pdfmanager.remote.storage import RemoteState
             dialog._message_label.setText('Dostęp został zablokowany przez administratora. Wpisz nowy kod dostępu.\n'+RemoteState().read().get('reason',''))
         accepted=dialog.exec()==dialog.DialogCode.Accepted
+        dialog.deleteLater()
         self._license_dialog_active=False
         if accepted and not self.license_manager.get_status().is_blocked:
             for action,enabled in self._blocked_action_states.items():action.setEnabled(enabled)
@@ -1458,12 +1488,14 @@ class MainWindow(QMainWindow):
         # Zwalniamy uchwyt pliku PRZED otwarciem okna operacji na stronach —
         # na Windows nadpisanie pliku, który wciąż jest otwarty w tym
         # procesie (nawet tylko do podglądu), zakończyłoby się błędem.
-        before=viewer.path.read_bytes()
+        before=viewer.capture_history()
         viewer.release_document()
+        dialog=None
         try:
             dialog = PageManagerDialog(path, self)
             dialog.exec()
         finally:
+            if dialog is not None:dialog.deleteLater()
             viewer.reload_document()
             viewer.record_external_edit(before)
             self._update_status_bar()
@@ -1491,12 +1523,14 @@ class MainWindow(QMainWindow):
         # Tak jak w Menedżerze stron: zwalniamy uchwyt pliku na czas działania
         # okna, żeby ewentualne poprawki (zapis na dysk) nie zablokowały się
         # na Windows o własny, wciąż otwarty uchwyt podglądu.
-        before=viewer.path.read_bytes()
+        before=viewer.capture_history()
         viewer.release_document()
+        dialog=None
         try:
             dialog = ProofreadingDialog(path, page_count, self)
             dialog.exec()
         finally:
+            if dialog is not None:dialog.deleteLater()
             viewer.reload_document()
             viewer.record_external_edit(before)
             self._update_status_bar()
@@ -1666,6 +1700,7 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------- zamknięcie
     def closeEvent(self, event) -> None:
+        if getattr(self,'_finalizing_close',False):event.ignore();return
         if hasattr(self,'_license_check_timer'):self._license_check_timer.stop()
         from pdfmanager.ui.background_job import Worker
         workers=[w for w in self.findChildren(Worker) if w.isRunning()]
@@ -1694,10 +1729,23 @@ class MainWindow(QMainWindow):
             self._compare_viewer.release_document()
         if self._compare_temp:
             self._compare_temp.cleanup()
-        for index in range(self._tabs.count()):
-            widget=self._tabs.widget(index)
-            widget.release_document()
-            if widget.working_copy:widget.working_copy.close()
+        documents=[self._tabs.widget(index) for index in range(self._tabs.count())]
+        for widget in documents:widget.release_document()
+        from pdfmanager.ui.responsive import run
+        self._finalizing_close=True
+        try:
+            if any(widget.working_copy for widget in documents):
+                run(lambda:[widget.working_copy.close(keep_plain=True) for widget in documents if widget.working_copy],self,'Zabezpieczanie niezapisanych dokumentów…',cancellable=False)
+            for widget in documents:
+                if widget.working_copy:widget.working_copy.finalize_close()
+                widget.clear_history()
+        except Exception as exc:
+            for widget in documents:
+                if widget.path.exists():widget.reload_document()
+            self._license_check_timer.start();self._transport_timer.start();event.ignore()
+            QMessageBox.critical(self,'PDFManager',translator.text('Nie udało się zabezpieczyć pracy. Program pozostaje otwarty; sprawdź miejsce na dysku.')+chr(10)+str(exc));return
+        finally:self._finalizing_close=False
+        self._text_properties.save_draft()
         settings.set_window_geometry(self.saveGeometry())
         super().closeEvent(event)
         if event.isAccepted() and hasattr(self,'_remote_controller'):self._remote_controller.finish_close()

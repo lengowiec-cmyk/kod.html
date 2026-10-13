@@ -65,13 +65,30 @@ def execute(operation,args,kwargs):
     if name=='fill_form' and len(args)>2:args=(*args[:2],{int(k):v for k,v in args[2].items()},*args[3:])
     return getattr(mod,name)(*args,**kwargs)
 
+ACCESS_REQUIRED=False
+
+def require_access():
+    """The frozen helper is not an alternate unlicensed editing entry point."""
+    from PySide6.QtCore import QCoreApplication
+    app=QCoreApplication.instance() or QCoreApplication(['PDFManager'])
+    app.setOrganizationName('PDFManager');app.setApplicationName('PDFManager')
+    from pdfmanager.licensing.license_manager import get_default_license_manager
+    global ACCESS_REQUIRED
+    previous=ACCESS_REQUIRED;ACCESS_REQUIRED=False
+    try:
+        if get_default_license_manager().get_status().is_blocked:raise PermissionError('Dostęp do operacji PDF wymaga aktywacji programu.')
+    finally:ACCESS_REQUIRED=previous
+
 def main(request_path):
+    global ACCESS_REQUIRED
     isolation.WORKER_MODE=True
     request=Path(request_path);response=request.with_name('response.json')
     try:
         if request.stat().st_size>64*1024*1024:raise ValueError('Zbyt duże zlecenie PDF.')
+        if getattr(sys,'frozen',False):require_access();ACCESS_REQUIRED=True
         limits();item=json.loads(request.read_text(encoding='utf-8'))
         value=execute(item['op'],isolation.decode(item['args']),isolation.decode(item['kwargs']))
+        if ACCESS_REQUIRED:require_access()
         result={'ok':True,'value':isolation.encode(value)}
     except Exception as exc:result={'ok':False,'type':type(exc).__name__,'error':str(exc)[:2000]}
     response.write_text(json.dumps(result,ensure_ascii=False),encoding='utf-8');return 0

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from pdfmanager.licensing.license_manager import LicenseManager, LicenseState
+from pdfmanager.licensing.license_manager import LicenseManager, LicenseState,LicenseStatus
 from pdfmanager.main import _run_license_gate
 
 
@@ -42,6 +42,8 @@ def test_gate_returns_true_when_activation_accepted(qapp, tmp_path):
     with patch("pdfmanager.main.ActivationDialog") as mock_dialog_cls:
         instance = mock_dialog_cls.return_value
         instance.exec.return_value = instance.DialogCode.Accepted
-        result = _run_license_gate(manager)
+        expired=manager.get_status()
+        valid=LicenseStatus(LicenseState.LICENSED,30,expired.expires_at+timedelta(days=30))
+        with patch.object(manager,'get_status',side_effect=[expired,valid]):result = _run_license_gate(manager)
 
     assert result is True

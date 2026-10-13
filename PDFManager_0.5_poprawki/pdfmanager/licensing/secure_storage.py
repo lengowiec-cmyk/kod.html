@@ -97,7 +97,8 @@ def _read_registry(key_path: str, value_name: str) -> str | None:
 def _write_file(file_path: Path, blob: str) -> None:
     try:
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.write_text(blob, encoding="utf-8")
+        from pdfmanager.pdf_engine.io_utils import atomic_write_bytes
+        atomic_write_bytes(file_path,blob.encode("utf-8"))
         if IS_WINDOWS:
             ctypes.windll.kernel32.SetFileAttributesW(str(file_path), FILE_ATTRIBUTE_HIDDEN)  # type: ignore[attr-defined]
     except OSError:

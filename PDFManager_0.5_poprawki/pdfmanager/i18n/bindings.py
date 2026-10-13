@@ -44,12 +44,14 @@ class UiTranslations(QObject):
         for window in self.app.topLevelWidgets():self.retranslate(window)
 
     def eventFilter(self, obj, event):
-        if event.type()==QEvent.LanguageChange and isinstance(obj,QDialogButtonBox) and any(b.property('i18nText') for b in obj.buttons()):
+        kind=event.type()
+        if kind not in (QEvent.Show,QEvent.LanguageChange):return False
+        if kind==QEvent.LanguageChange and isinstance(obj,QDialogButtonBox) and any(b.property('i18nText') for b in obj.buttons()):
             # This box has explicit application captions, rather than Qt's
             # standard labels. Preserve them when Qt updates its translator.
             self.retranslate(obj)
             return True
-        if event.type() in (QEvent.Show,QEvent.LanguageChange) and isinstance(obj,QWidget) and obj.isWindow():
+        if kind in (QEvent.Show,QEvent.LanguageChange) and isinstance(obj,QWidget) and obj.isWindow():
             self.retranslate(obj)
             # Qt standard button boxes may reset captions after the parent Show
             # or LanguageChange event; reapply explicit captions afterwards.

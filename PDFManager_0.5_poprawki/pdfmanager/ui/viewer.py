@@ -150,8 +150,8 @@ class PdfViewerWidget(QWidget):
         self.drive_info = None
         self._doc: PdfDocument | None = None
         self._text_engine = get_default_text_edit_engine()
-        self._undo_stack: list[bytes] = []
-        self._redo_stack: list[bytes] = []
+        self._undo_stack = [];self._history=None
+        self._redo_stack = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -632,57 +632,70 @@ class PdfViewerWidget(QWidget):
             self._render_current_page()
         return result
 
-    def _push_undo_snapshot(self) -> None:
-        try:
-            data = self.path.read_bytes()
-        except OSError:
-            return
-        self._undo_stack.append(data)
-        if len(self._undo_stack) > MAX_UNDO_HISTORY:
-            self._undo_stack.pop(0)
-        self._redo_stack.clear()
-        self.undo_redo_changed.emit()
+    def _history_job(self,function):
+        from pdfmanager.ui.responsive import run
+        return run(function,self,'Zachowywanie historii dokumentu…')
+
+    def capture_history(self):
+        if self._history is None:
+            from pdfmanager.dms.undo_history import UndoHistory
+            self._history=UndoHistory()
+        return self._history_job(lambda:self._history.capture(self.path))
+
+    def _clear_stack(self,stack):
+        if self._history:
+            for snapshot in stack:self._history.drop(snapshot)
+        stack.clear()
+
+    def _trim_stack(self,stack):
+        while len(stack)>MAX_UNDO_HISTORY or (len(stack)>1 and sum(map(len,stack))>64*1024*1024):self._history.drop(stack.pop(0))
+
+    def clear_history(self):
+        self._undo_stack.clear();self._redo_stack.clear()
+        if self._history:self._history.close();self._history=None
+
+    def _push_undo_snapshot(self):
+        snapshot=self.capture_history();self._undo_stack.append(snapshot);self._trim_stack(self._undo_stack);self._clear_stack(self._redo_stack);self.undo_redo_changed.emit()
 
     def _mutate_file(self, fn: Callable[[], T]) -> T:
-        before=self.path.read_bytes()
-        result=self._reload_after(fn)
-        self._undo_stack.append(before)
-        while len(self._undo_stack)>MAX_UNDO_HISTORY or (len(self._undo_stack)>1 and sum(map(len,self._undo_stack))>64*1024*1024):
-            self._undo_stack.pop(0)
-        self._redo_stack.clear();self.undo_redo_changed.emit()
+        before=self.capture_history()
+        try:result=self._reload_after(fn)
+        except Exception:
+            try:self._reload_after(lambda:self._history_job(lambda:self._history.restore(before,self.path)))
+            finally:self._history.drop(before)
+            raise
+        self._undo_stack.append(before);self._trim_stack(self._undo_stack)
+        self._clear_stack(self._redo_stack);self.undo_redo_changed.emit()
         if self.working_copy:self.working_copy.changed()
         self.document_saved.emit()
         return result
 
     def record_external_edit(self,before):
-        if self.path.read_bytes()==before:return
-        self._undo_stack.append(before)
-        while len(self._undo_stack)>MAX_UNDO_HISTORY or (len(self._undo_stack)>1 and sum(map(len,self._undo_stack))>64*1024*1024):self._undo_stack.pop(0)
-        self._redo_stack.clear();self.undo_redo_changed.emit()
+        from pdfmanager.dms.undo_history import Snapshot
+        from pdfmanager.dms.recovery import digest
+        if not isinstance(before,Snapshot):
+            if self._history is None:
+                from pdfmanager.dms.undo_history import UndoHistory
+                self._history=UndoHistory()
+            before=self._history_job(lambda:self._history.from_bytes(before))
+        if self._history_job(lambda:digest(self.path))==before.checksum:self._history.drop(before);return
+        self._undo_stack.append(before);self._trim_stack(self._undo_stack);self._clear_stack(self._redo_stack);self.undo_redo_changed.emit()
         if self.working_copy:self.working_copy.changed()
         self.document_saved.emit()
 
-    def undo(self) -> None:
-        if not self._undo_stack:
-            return
-        current = self.path.read_bytes()
-        previous = self._undo_stack.pop()
-        self._reload_after(lambda: atomic_write_bytes(self.path, previous))
-        self._redo_stack.append(current)
+    def _restore_history(self,source,destination):
+        if not source:return
+        current=self.capture_history();previous=source[-1]
+        try:self._reload_after(lambda:self._history_job(lambda:self._history.restore(previous,self.path)))
+        except Exception:
+            self._history.drop(current);raise
+        source.pop();self._history.drop(previous);destination.append(current);self._trim_stack(destination)
         self.undo_redo_changed.emit()
         if self.working_copy:self.working_copy.changed()
         self.document_saved.emit()
 
-    def redo(self) -> None:
-        if not self._redo_stack:
-            return
-        current = self.path.read_bytes()
-        next_data = self._redo_stack.pop()
-        self._reload_after(lambda: atomic_write_bytes(self.path, next_data))
-        self._undo_stack.append(current)
-        self.undo_redo_changed.emit()
-        if self.working_copy:self.working_copy.changed()
-        self.document_saved.emit()
+    def undo(self):self._restore_history(self._undo_stack,self._redo_stack)
+    def redo(self):self._restore_history(self._redo_stack,self._undo_stack)
 
     # ------------------------------------------------------------- edycja tekstu
     def apply_text_edit(self, span: TextSpan, new_text: str, **options) -> EditResult:
@@ -748,6 +761,7 @@ class PdfViewerWidget(QWidget):
         self._render_current_page()
 
     def closeEvent(self, event) -> None:
+        if getattr(self,'_finalizing_close',False):event.ignore();return
         from pdfmanager.ui.background_job import Worker
         running=[w for w in self.findChildren(Worker) if w.isRunning()]
         if running:
@@ -755,5 +769,12 @@ class PdfViewerWidget(QWidget):
             for worker in running:worker.control.cancelled.set();worker.finished.connect(self.close)
             return
         self.release_document()
-        if self.working_copy:self.working_copy.close()
+        if self.working_copy:
+            from pdfmanager.ui.responsive import run
+            self._finalizing_close=True
+            try:run(self.working_copy.close,self,'Zabezpieczanie niezapisanego dokumentu…',cancellable=False)
+            except Exception as exc:
+                self.reload_document();event.ignore();QMessageBox.critical(self,'PDFManager',str(exc));return
+            finally:self._finalizing_close=False
+        self.clear_history()
         super().closeEvent(event)

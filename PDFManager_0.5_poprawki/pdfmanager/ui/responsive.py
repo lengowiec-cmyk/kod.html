@@ -6,7 +6,7 @@ from pdfmanager.ui.background_job import Worker,BusyDialog
 _busy=0
 def busy():return bool(_busy)
 
-def run(function,parent=None,title='Przetwarzanie dokumentu…'):
+def run(function,parent=None,title='Przetwarzanie dokumentu…',*,cancellable=True):
     app=QApplication.instance()
     if not isinstance(app,QApplication) or QThread.currentThread()!=app.thread():return function()
     if busy():raise RuntimeError('Trwa inna operacja na dokumencie. Poczekaj na jej zakończenie.')
@@ -24,7 +24,8 @@ def run(function,parent=None,title='Przetwarzanie dokumentu…'):
     worker.finished.connect(loop.quit)
     def cancel():
         worker.control.cancelled.set();dialog.setLabelText('Anulowanie po zakończeniu bezpiecznego kroku…');dialog.setCancelButton(None);dialog.show()
-    dialog.canceled.connect(cancel)
+    if cancellable:dialog.canceled.connect(cancel)
+    else:dialog.setCancelButton(None);dialog.setWindowFlag(Qt.WindowCloseButtonHint,False)
     try:
         dialog.show();worker.start();loop.exec();worker.wait()
         ok,value=outcome['value']

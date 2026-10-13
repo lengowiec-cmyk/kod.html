@@ -16,6 +16,19 @@ def barcode_pdf(source):
             for item in zxingcpp.read_barcodes(image):results.append({'page':page.number,'format':str(item.format),'text':item.text})
     return results
 
+def deskew_image(image):
+    """Conservative small-angle correction; keep edges and skip uncertain cases."""
+    import numpy as np
+    gray=image.convert('L');gray.thumbnail((800,800));mask=gray.point(lambda value:0 if value<170 else 255)
+    def score(angle):
+        rotated=mask.rotate(angle,resample=Image.Resampling.NEAREST,expand=False,fillcolor=255)
+        rows=np.sum(np.asarray(rotated)<170,axis=1);return float(np.sum(np.diff(rows.astype('float64'))**2))
+    initial=score(0);ink=float(np.mean(np.asarray(mask)<170))
+    if not .0005<ink<.2 or initial<=0:return image
+    samples=[(score(float(a)),float(a)) for a in np.arange(-5,5.01,.25)];best,angle=max(samples)
+    if abs(angle)<.25 or best<initial*1.12:return image
+    return image.rotate(angle,resample=Image.Resampling.BICUBIC,expand=True,fillcolor='white')
+
 def prepare_scan(source,output,profile):
     with safe_open(source) as doc,pymupdf.open() as result:
         for page in doc:
@@ -28,8 +41,9 @@ def prepare_scan(source,output,profile):
             if profile.get('omit_blank') and not page.get_text().strip() and dark<=max(8,int(image.width*image.height*1e-6)):continue
             if profile['color']=='Szarość':image=gray
             elif profile['color']=='Czerń i biel':image=gray.point(lambda value:255 if value>160 else 0).convert('1')
+            if profile.get('deskew'):image=deskew_image(image)
             if profile.get('rotation'):image=image.rotate(-int(profile['rotation']),expand=True,fillcolor='white')
-            buffer=io.BytesIO();image.save(buffer,format='PNG');target=result.new_page(width=page.rect.width,height=page.rect.height);target.insert_image(target.rect,stream=buffer.getvalue())
+            buffer=io.BytesIO();image.save(buffer,format='PNG');target=result.new_page(width=image.width*72/int(profile['dpi']),height=image.height*72/int(profile['dpi']));target.insert_image(target.rect,stream=buffer.getvalue())
         if not len(result):raise ValueError('Wszystkie strony rozpoznano jako puste. Wyłącz pomijanie pustych stron.')
         data=result.tobytes(garbage=3,deflate=True)
     atomic_write_bytes(output,data)

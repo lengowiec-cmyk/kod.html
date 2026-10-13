@@ -2,11 +2,13 @@
 from pdfmanager.i18n.translator import translator
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer,QSignalBlocker
 from PySide6.QtGui import QColor, QKeySequence
-from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QFormLayout,QTabWidget,QWidget,QPushButton,QLabel,QLineEdit,QTextEdit,QComboBox,QSpinBox,QDoubleSpinBox,QCheckBox,QListWidget,QFileDialog,QInputDialog,QMessageBox,QColorDialog,QTableWidget,QTableWidgetItem,QAbstractItemView,QScrollArea)
+from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QFormLayout,QTabWidget,QWidget,QPushButton,QLabel,QLineEdit,QTextEdit,QComboBox,QSpinBox,QDoubleSpinBox,QCheckBox,QListWidget,QFileDialog,QInputDialog,QMessageBox,QColorDialog,QTableWidget,QTableWidgetItem,QAbstractItemView,QScrollArea,QGroupBox)
 from pdfmanager.dms.transport import Library,filename,render_tokens,create_order,read_checklist,save_checklist,missing_documents
 from pdfmanager.dms.preferences import Preferences
+from pdfmanager.dms.transport_templates import templates,ORDER_PROFILES
+from pdfmanager.ui.word_format import SafeTextEdit
 from pdfmanager.pdf_engine import transport_ops
 from pdfmanager.ui.background_job import run_job
 from pdfmanager.drive.teamwork import TeamDrive,Outbox
@@ -40,6 +42,8 @@ class TransportCenter(QDialog):
         root=QVBoxLayout(self);heading=QLabel('Centrum spedycji');heading.setObjectName('TransportHeading');root.addWidget(heading);root.addWidget(QLabel('Dokumenty transportowe • szablony • praca zespołowa'))
         self.tabs=QTabWidget();root.addWidget(self.tabs)
         self._library_page();self._order_page();self._batch_page();self._drive_page();self._quick_page()
+        from .review_panel import ReviewPanel
+        self.review_panel=ReviewPanel(window);self.tabs.addTab(self.review_panel,'Weryfikacja dokumentów')
         button(root,'Zamknij',self.accept)
     def page(self,name):
         w=QWidget();layout=QVBoxLayout(w);scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setFrameShape(QScrollArea.NoFrame);scroll.setWidget(w);self.tabs.addTab(scroll,name);return layout
@@ -55,7 +59,24 @@ class TransportCenter(QDialog):
         self.profile=field(form,'Profil dokumentu:',QComboBox());self.profile.setProperty('i18nSkip',True);self.profile.addItems(self.data['profiles']);self.profile.currentTextChanged.connect(self.load_profile)
         self.kind=field(form,'Biblioteka:',QComboBox());self.kind.addItems(['Stemple','Bloki tekstu'])
         self.entry=field(form,'Wzór:',QComboBox());self.entry.setProperty('i18nSkip',True);self.kind.currentIndexChanged.connect(self.refresh_entries);self.entry.currentTextChanged.connect(self.load_entry)
-        self.text=QTextEdit();layout.addWidget(self.text)
+        self.text=SafeTextEdit();layout.addWidget(self.text)
+        preset=QFormLayout();layout.addLayout(preset)
+        self.content_language=QComboBox();self.content_language.setProperty('i18nSkip',True)
+        for label,code in [('Polski','pl'),('English','en'),('Українська','uk')]:self.content_language.addItem(label,code)
+        self.content_language.setCurrentIndex(max(0,self.content_language.findData(Preferences().get('template_language','pl'))))
+        preset.addRow('Język pieczątki / wstawki:',self.content_language)
+        self.factory=QComboBox();self.factory.setProperty('i18nSkip',True);preset.addRow('Gotowe wzory transportowe:',self.factory)
+        self.content_language.currentIndexChanged.connect(self.refresh_factory);self.kind.currentIndexChanged.connect(self.refresh_factory)
+        self.factory.activated.connect(self.use_factory);self.refresh_factory()
+        button(layout,'Wstaw wybrany gotowy wzór',lambda:self.use_factory(self.factory.currentIndex()))
+        self.favorite_templates=QComboBox();self.favorite_templates.setProperty('i18nSkip',True);preset.addRow('Ulubione wstawki:',self.favorite_templates);self.favorite_templates.activated.connect(self.use_favorite);self.refresh_template_favorites()
+        button(layout,'Dodaj wstawkę do ulubionych',self.add_template_favorite)
+        self.details={};details_group=QGroupBox('Dane przesyłki — opcjonalne');details_group.setCheckable(True);details_group.setChecked(False);layout.addWidget(details_group);details_layout=QVBoxLayout(details_group);details_body=QWidget();details_form=QFormLayout(details_body);details_layout.addWidget(details_body);details_body.hide();details_group.toggled.connect(details_body.setVisible)
+        for key,label in [('awb','AWB:'),('hawb','HAWB:'),('mawb','MAWB:'),('trasa','Trasa:'),('przewoznik','Przewoźnik:'),('sztuki','Liczba sztuk:'),('masa','Masa:'),('uwagi','Uwagi:')]:
+            self.details[key]=field(details_form,label,QLineEdit());self.details[key].setMaxLength(200)
+        self.mark_scope=QComboBox();self.mark_scope.addItems(['Bieżąca strona','Wszystkie strony','Wybrany zakres']);preset.addRow('Strony do oznaczenia:',self.mark_scope)
+        self.mark_range=QLineEdit();self.mark_range.setPlaceholderText('1-3,5');preset.addRow('Zakres stron:',self.mark_range)
+
         layout.addWidget(QLabel('Pola automatyczne: {data}, {godzina}, {pracownik}, {zlecenie}, {kontrahent}.'))
         row=QHBoxLayout();layout.addLayout(row)
         button(row,'Wstaw obraz / logo',self.insert_image);button(row,'Nowy wzór',self.add_entry);button(row,'Zapisz wzór',self.save_entry);button(row,'Usuń wzór',self.delete_entry)
@@ -71,6 +92,34 @@ class TransportCenter(QDialog):
         row=QHBoxLayout();layout.addLayout(row);button(row,'Zapisz profil pozycji',self.save_profile);button(row,'Nowy profil',self.new_profile)
         button(row,'Podgląd na bieżącej stronie',self.preview_mark);button(row,'Wstaw na bieżącej stronie',self.apply_mark)
         self.load_profile(self.profile.currentText());self.refresh_entries()
+    def refresh_factory(self):
+        lang=self.content_language.currentData();Preferences().put('template_language',lang)
+        self.factory_rows=templates(lang,'stamps' if self.kind.currentIndex()==0 else 'snippets')
+        self.factory.clear()
+        for value in self.factory_rows:self.factory.addItem(value['label'],value['id'])
+    def use_factory(self,index):
+        if 0<=index<len(self.factory_rows):self.text.setPlainText(self.factory_rows[index]['text'])
+    def selected_pages(self,viewer):
+        scope=self.mark_scope.currentIndex()
+        if not scope:return [viewer.current_page]
+        if scope==1:return list(range(viewer.page_count))
+        from pdfmanager.pdf_engine.workflows import parse_pages
+        return parse_pages(self.mark_range.text(),viewer.page_count)
+    def refresh_template_favorites(self):
+        self.template_favorites=self.library.favorites();self.favorite_templates.clear()
+        for value in self.template_favorites:self.favorite_templates.addItem(value['language'].upper()+' — '+value['text'][:36])
+    def add_template_favorite(self):
+        try:
+            text=self.text.toPlainText().strip()
+            if not text or len(text)>5000:raise ValueError('Wpisz tekst wstawki do 5000 znaków.')
+            self.library.add_favorite({'text':text,'language':self.content_language.currentData(),'options':self.options()});self.refresh_template_favorites()
+        except Exception as exc:self.error(exc)
+    def use_favorite(self,index):
+        if not 0<=index<len(self.template_favorites):return
+        value=self.template_favorites[index];self.text.setPlainText(value['text']);self.content_language.setCurrentIndex(self.content_language.findData(value['language']))
+        options=value['options']
+        for key,widget in [('x',self.x),('y',self.y),('width',self.width),('height',self.height),('size',self.size)]:widget.setValue(options[key])
+        self.color=options['color'];self.fontfile=options.get('fontfile','');self.border.setChecked(options.get('border',False))
     def insert_image(self):
         path,_=QFileDialog.getOpenFileName(self,'Obraz pieczątki lub logo','','Obrazy (*.png *.jpg *.jpeg)')
         if not path:return
@@ -120,36 +169,38 @@ class TransportCenter(QDialog):
         self.library.save(self.data);self.refresh_entries()
     def resolved_text(self):
         Preferences().put('transport_employee',self.employee.text().strip())
-        text=render_tokens(self.text.toPlainText(),self.order.text(),self.contractor.text(),self.employee.text())
+        text=render_tokens(self.text.toPlainText(),self.order.text(),self.contractor.text(),self.employee.text(),**{key:widget.text() for key,widget in self.details.items()})
         if self.metadata.isChecked():text+='\n'+render_tokens('{data} {godzina} • {pracownik}',employee=self.employee.text())
         return text
     def preview_mark(self):
         try:
-            v=self.viewer();path=Path(self.temp.name)/'preview.pdf';transport_ops.mark(v.path,path,self.resolved_text(),self.options(),[v.current_page])
+            v=self.viewer();path=Path(self.temp.name)/'preview.pdf';transport_ops.mark(v.path,path,self.resolved_text(),self.options(),self.selected_pages(v))
             from pdfmanager.ui.viewer import PdfViewerWidget
             d=QDialog(self);d.setWindowTitle('Podgląd — dokument nie został zmieniony');d.resize(750,800);layout=QVBoxLayout(d);viewer=PdfViewerWidget(str(path),d);layout.addWidget(viewer);QTimer.singleShot(300,lambda:viewer.go_to_page(v.current_page));d.exec();viewer.release_document()
         except Exception as exc:self.error(exc)
     def apply_mark(self):
         try:
-            v=self.viewer();text=self.resolved_text();options=self.options();v._mutate_file(lambda:transport_ops.mark(v.path,v.path,text,options,[v.current_page]));self.window.statusBar().showMessage('Wstawiono element. Dostępne Cofnij; zapisz dokument.',4000)
+            v=self.viewer();text=self.resolved_text();options=self.options();pages=self.selected_pages(v)
+            if len(pages)>1 and QMessageBox.question(self,'PDFManager',translator.text('Wstawić oznaczenie na {count} stronach? Najpierw sprawdź podgląd.',count=len(pages)))!=QMessageBox.Yes:return
+            v._mutate_file(lambda:transport_ops.mark(v.path,v.path,text,options,pages));self.window.statusBar().showMessage('Wstawiono element. Dostępne Cofnij; zapisz dokument.',4000)
         except Exception as exc:self.error(exc)
     def _order_page(self):
         layout=self.page('Teczki zleceń');form=QFormLayout();layout.addLayout(form)
         self.order_root=field(form,'Katalog zleceń:',QLineEdit());button(layout,'Wybierz katalog',lambda:self.choose_directory(self.order_root))
-        self.project_order=field(form,'Numer zlecenia:',QLineEdit());self.project_client=field(form,'Kontrahent:',QLineEdit());button(layout,'Utwórz teczkę ze strukturą folderów',self.new_order)
+        self.project_order=field(form,'Numer zlecenia:',QLineEdit());self.project_client=field(form,'Kontrahent:',QLineEdit());self.order_profile=QComboBox();self.order_profile.addItems(['Transport drogowy','Transport lotniczy']);form.addRow('Profil zlecenia:',self.order_profile);button(layout,'Utwórz teczkę ze strukturą folderów',self.new_order)
         row=QHBoxLayout();layout.addLayout(row);button(row,'Otwórz teczkę zlecenia',self.open_order);button(row,'Ostatnie foldery',self.recent_folder)
         self.project_label=QLabel('Wybierz teczkę zlecenia.');layout.addWidget(self.project_label);self.checks={}
-        for name in ('Podpisany CMR','POD','Faktura'):
+        for name in ('Podpisany CMR','POD','Faktura','AWB','HAWB','MAWB','Faktura handlowa','Lista pakunkowa','Dokumenty celne'):
             row=QHBoxLayout();layout.addLayout(row);box=QCheckBox(name+' — sprawdzono');self.checks[name]=box;row.addWidget(box);button(row,'Dołącz dokument',lambda checked=False,n=name:self.attach_order(n))
         button(layout,'Zapisz listę kontrolną',self.save_order);self.missing=QLabel('');layout.addWidget(self.missing)
         button(layout,'Sprawdź braki we wszystkich teczkach',self.check_orders)
-        self.naming=QComboBox();self.naming.setProperty("i18nSkip",True);self.naming.addItems(['CMR','POD','Zlecenie','Faktura']);form.addRow('Typ dokumentu do nazwy:',self.naming)
-        button(layout,'Podpowiedz dane z tekstu / OCR',self.suggest_data);button(layout,'Zapisz bieżący PDF z automatyczną nazwą',self.named_copy);layout.addStretch()
+        self.naming=QComboBox();self.naming.setProperty("i18nSkip",True);self.naming.addItems(['CMR','POD','Zlecenie','Faktura','AWB','HAWB','MAWB','Packing list','Customs']);form.addRow('Typ dokumentu do nazwy:',self.naming)
+        button(layout,'Podpowiedz dane z tekstu / OCR',self.suggest_data);button(layout,'Zapisz bieżący PDF z automatyczną nazwą',self.named_copy);button(layout,'Zapisz nową wersję bez nadpisywania',self.versioned_copy);layout.addStretch()
     def choose_directory(self,edit):
         value=QFileDialog.getExistingDirectory(self,'Katalog',edit.text())
         if value:edit.setText(value);Preferences().recent(value)
     def new_order(self):
-        try:self.folder=create_order(self.order_root.text(),self.project_order.text(),self.project_client.text());self.load_order()
+        try:self.folder=create_order(self.order_root.text(),self.project_order.text(),self.project_client.text(),profile='air' if self.order_profile.currentIndex() else 'road');self.load_order()
         except Exception as exc:self.error(exc)
     def open_order(self):
         path=QFileDialog.getExistingDirectory(self,'Teczka zlecenia',self.order_root.text())
@@ -162,7 +213,9 @@ class TransportCenter(QDialog):
     def load_order(self):
         try:
             self.checkdata=read_checklist(self.folder);self.project_label.setText(str(self.folder));self.project_order.setText(self.checkdata['order']);self.project_client.setText(self.checkdata['contractor']);Preferences().recent(self.folder)
-            for name,box in self.checks.items():box.setChecked(bool(self.checkdata.get('checks',{}).get(name)))
+            self.order_profile.setCurrentIndex(self.checkdata.get('profile','road')=='air')
+            for name,box in self.checks.items():
+                box.setVisible(name in ORDER_PROFILES[self.checkdata.get('profile','road')]['destinations']);box.setChecked(bool(self.checkdata.get('checks',{}).get(name)))
             self.missing.setText('Brakuje: '+', '.join(missing_documents(self.folder)))
         except Exception as exc:self.checkdata=None;self.error(exc)
     def attach_order(self,name):
@@ -171,9 +224,12 @@ class TransportCenter(QDialog):
         if not path:return
         from pdfmanager.pdf_engine.io_utils import atomic_copy_file
         try:
-            sub={'Podpisany CMR':'02 CMR','POD':'03 POD','Faktura':'04 Faktury'}[name];target=self.folder/sub/Path(path).name
+            from pdfmanager.security.isolation import call
+            call('document.info',Path(path))
+            sub=({'Podpisany CMR':'02 CMR','POD':'03 POD','Faktura':'04 Faktury'} if self.checkdata.get('profile','road')=='road' else ORDER_PROFILES['air']['destinations'])[name];target=self.folder/sub/Path(path).name
             if target.exists():raise FileExistsError('Dokument już istnieje. Zmień nazwę przed dołączeniem.')
-            atomic_copy_file(path,target);self.checkdata.setdefault('documents',{})[name]=str(target.relative_to(self.folder));self.save_order()
+            from pdfmanager.ui.responsive import run
+            run(lambda:atomic_copy_file(path,target),self);self.checkdata.setdefault('documents',{})[name]=str(target.relative_to(self.folder));self.save_order()
         except Exception as exc:self.error(exc)
     def save_order(self):
         if not self.folder or not self.checkdata:return
@@ -213,7 +269,20 @@ class TransportCenter(QDialog):
             target=Path(folder)/name
             if target.exists():raise FileExistsError('Plik istnieje; nie został nadpisany.')
             from pdfmanager.pdf_engine.io_utils import atomic_copy_file
-            atomic_copy_file(v.path,target);Preferences().recent(folder);QMessageBox.information(self,'Zapis','Zapisano lokalną kopię: '+str(target))
+            from pdfmanager.ui.responsive import run
+            run(lambda:atomic_copy_file(v.path,target),self);Preferences().recent(folder);QMessageBox.information(self,'Zapis','Zapisano lokalną kopię: '+str(target))
+        except Exception as exc:self.error(exc)
+    def versioned_copy(self):
+        from datetime import datetime
+        try:
+            viewer=self.viewer();source=viewer.source_path
+            name=source.stem+'_v_'+datetime.now().strftime('%Y%m%d_%H%M%S')+'.pdf'
+            folder=QFileDialog.getExistingDirectory(self,translator.text('Folder docelowy'),str(source.parent))
+            if not folder:return
+            from pdfmanager.dms.files import transfer_file
+            from pdfmanager.ui.responsive import run
+            target=Path(folder)/name;run(lambda:transfer_file(viewer.path,target),self)
+            QMessageBox.information(self,'PDFManager',translator.text('Zapisano nową wersję. Plik źródłowy nie został nadpisany.')+chr(10)+str(target))
         except Exception as exc:self.error(exc)
     def _batch_page(self):
         layout=self.page('Pakiety i operacje zbiorcze');self.files=QListWidget();self.files.setDragDropMode(QAbstractItemView.InternalMove);self.files.setSelectionMode(QAbstractItemView.ExtendedSelection);layout.addWidget(self.files)
@@ -367,14 +436,23 @@ class TransportCenter(QDialog):
         except Exception as exc:self.error(exc)
     def _quick_page(self):
         layout=self.page('Ulubione i skróty');layout.addWidget(QLabel('Ctrl+Shift+T — centrum spedycji\nCtrl+Alt+N — zapisz i otwórz następny PDF w tym folderze\nCtrl+S — zapis; dokumenty API Drive trafiają do bezpiecznej kolejki.'))
-        self.favorite_actions=QListWidget();self.favorite_actions.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.favorite_actions=QListWidget();self.favorite_actions.setProperty('i18nItems',True);self.favorite_actions.setSelectionMode(QAbstractItemView.MultiSelection)
         stored=Preferences().get('transport_quick_actions',['transport_center','save_next'])
         self.action_choices=[('transport_center','Centrum spedycji'),('save_next','Zapisz i następny'),('transport_send','Wyślij kolejkę'),('transport_queue','Dodaj do kolejki')]
         for key,label in self.action_choices:
             self.favorite_actions.addItem(label)
             if key in stored:self.favorite_actions.item(self.favorite_actions.count()-1).setSelected(True)
         layout.addWidget(self.favorite_actions);button(layout,'Zapisz ulubione narzędzia na pasku',self.save_favorites)
-        button(layout,'Otwórz ostatni folder',self.open_recent);layout.addStretch()
+        button(layout,'Sprawdź gotowość stanowiska',self.show_readiness)
+        button(layout,'Przygotuj skany według profilu',self.window._scan_profiles.show);button(layout,'Otwórz ostatni folder',self.open_recent);layout.addStretch()
+    def show_readiness(self):
+        from pdfmanager.dms.readiness import checks
+        def show(rows):
+            dialog=QDialog(self);dialog.setWindowTitle('Gotowość stanowiska');layout=QVBoxLayout(dialog);table=QTableWidget(len(rows),3);table.setHorizontalHeaderLabels(['Element','Status','Informacja']);table.setEditTriggers(QTableWidget.NoEditTriggers)
+            for i,values in enumerate(rows):
+                for j,value in enumerate(values):table.setItem(i,j,QTableWidgetItem(translator.text(value)))
+            table.resizeColumnsToContents();layout.addWidget(table);button(layout,'Zamknij',dialog.accept);dialog.resize(850,450);dialog.exec()
+        run_job(self,'Diagnostyka stanowiska',checks,show)
     def save_favorites(self):
         keys=[key for i,(key,_) in enumerate(self.action_choices) if self.favorite_actions.item(i).isSelected()];Preferences().put('transport_quick_actions',keys);self.window._refresh_transport_quick()
     def open_recent(self):

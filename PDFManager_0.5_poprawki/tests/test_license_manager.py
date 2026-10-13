@@ -47,7 +47,7 @@ def manager(fake_registry, tmp_path, clock):
 def test_first_run_starts_full_trial(manager):
     status = manager.get_status()
     assert status.state == LicenseState.TRIAL
-    assert status.days_remaining == 182
+    assert status.days_remaining == 181
     assert status.is_blocked is False
     assert status.is_near_expiry is False
 
@@ -57,7 +57,7 @@ def test_trial_days_remaining_decreases_over_time(manager, clock):
     clock.advance(170)
     status = manager.get_status()
     assert status.state == LicenseState.TRIAL
-    assert status.days_remaining == 12
+    assert status.days_remaining == 11
 
 
 def test_trial_does_not_reset_on_repeated_checks(manager, clock):
@@ -71,7 +71,7 @@ def test_trial_does_not_reset_on_repeated_checks(manager, clock):
     assert status.state == LicenseState.EXPIRED
 
 
-def test_trial_expires_after_182_days(manager, clock):
+def test_trial_expires_after_six_calendar_months(manager, clock):
     manager.get_status()
     clock.advance(183)
     status = manager.get_status()
@@ -84,7 +84,7 @@ def test_trial_near_expiry_flag(manager, clock):
     manager.get_status()
     clock.advance(176)  # zostaje 6 dni
     status = manager.get_status()
-    assert status.days_remaining == 6
+    assert status.days_remaining == 5
     assert status.is_near_expiry is True
     assert status.is_blocked is False
 
@@ -97,7 +97,7 @@ def test_trial_survives_loss_of_one_storage_location(manager, clock, fake_regist
 
     status = manager.get_status()
     # Plik przetrwał z oryginalną datą startu - licznik NIE wraca do 182.
-    assert status.days_remaining == 182 - 50
+    assert status.days_remaining == 181 - 50
 
 
 def test_activate_with_valid_key_switches_to_licensed(manager, private_key):

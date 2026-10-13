@@ -30,7 +30,9 @@ def mark(source, output, text, options, pages=None):
     with safe_open(source) as doc:
         indices=list(range(len(doc))) if pages is None else pages
         if not indices:raise ValueError('Wybierz strony.')
-        for i in indices:
+        for count,i in enumerate(indices):
+            from pdfmanager.dms.jobs import checkpoint
+            checkpoint(count,len(indices),'Wstawianie oznaczeń')
             if not 0<=i<len(doc):raise ValueError('Nieprawidłowy numer strony.')
             _box(doc[i],text,options)
         data=doc.tobytes(garbage=4,deflate=True)
